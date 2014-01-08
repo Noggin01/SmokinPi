@@ -80,6 +80,13 @@
 <a name="web-interface" class="anchor" href="#web-interface"><span class="octicon octicon-link"></span></a>Web Interface</h2>
 
 <p>Apache is used to provide a web interface which allows for remote monitoring and control of the system.  Setpoints for cabinet temperature and the finishing temperature for each of the meat probes may be specified on the web page.  Current temperatures of each probe, meat and cabinet, may be monitored from the web page.</p>
+
+<p>The web interface also allows for the database to be downloaded in an Excel compatible csv format.</p>
+
+<h2>
+<a name="safety-precautions" class="anchor" href="#safety-precautions"><span class="octicon octicon-link"></span></a>Safety Precautions</h2>
+
+<p>A K-Type thermocouple is utilized to detect the flame from the burner.  In the case that the flame is extinguished, the propane needle valve will be closed.  In order to light the flame, this safety feature must be temporarily bypassed via the web interface.  The bypass will remain active until either 5 minutes have passed or flame is detected.  During bypass, the needle valve will be fully opened.  The propane may be manually shut off through the smoker's main control knob.</p>
       </section>
       <footer>
         <p><small>Hosted on <a href="http://pages.github.com">GitHub Pages</a> using the Dinky theme</small></p>
