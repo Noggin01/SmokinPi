@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <title>Smokinpi by Noggin01</title>
+    <title>Smokin'Pi by Noggin01</title>
 
     <link rel="stylesheet" href="stylesheets/styles.css">
     <link rel="stylesheet" href="stylesheets/pygment_trac.css">
@@ -16,8 +16,8 @@
   <body>
     <div class="wrapper">
       <header>
-        <h1 class="header">Smokinpi</h1>
-        <p class="header">Raspberry Pi based propane smoker controller</p>
+        <h1 class="header">Smokin'Pi</h1>
+        <p class="header">Raspberry Pi Based Propane Smoker Controller</p>
 
         <ul>
           <li class="download"><a class="buttons" href="https://github.com/Noggin01/SmokinPi/zipball/master">Download ZIP</a></li>
@@ -30,10 +30,17 @@
 
       </header>
       <section>
-        <h3>
-<a name="welcome-to-github-pages" class="anchor" href="#welcome-to-github-pages"><span class="octicon octicon-link"></span></a>Welcome to GitHub Pages.</h3>
+        <h1>
+<a name="smokinpi" class="anchor" href="#smokinpi"><span class="octicon octicon-link"></span></a>Smokin'Pi</h1>
 
-<p>This automatic page generator is the easiest way to create beautiful pages for all of your projects. Author your page content here using GitHub Flavored Markdown, select a template crafted by a designer, and publish. After your page is generated, you can check out the new branch:</p>
+<p>The Smokin'Pi is a solution to controlling your propane smoker by adjusting the flow of propane via a servo controlled valve.  A needle valve is used to improve the resolution of the controller and to also allow increased torque output from the servo motor.  Control is provided via a web interface.</p>
+
+<h2>
+<a name="temperature-monitoring" class="anchor" href="#temperature-monitoring"><span class="octicon octicon-link"></span></a>Temperature Monitoring</h2>
+
+<p>Temperature monitoring is achieved through the use of multiple thermistor probes.  Since the Raspberry Pi doesn't have any analog inputs available, an ADC IC with SPI communication was chosen.  The selected part is a TI TLC1543IN.</p>
+
+<p>The TI TLC1543IN is designed to run from a 5v power rail.  The SPI inputs on the TLC1543IN are compatible with 3.3v signaling, but the outputs are driven to 5v.  Simple circuitry is utilized to ensure that the voltage presented to the Raspberry Pi does not exceed 3.3v.</p>
 
 <pre><code>$ cd your_repo_root/repo_name
 $ git fetch origin
