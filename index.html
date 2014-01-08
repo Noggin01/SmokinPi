@@ -42,6 +42,15 @@
 
 <p>The TI TLC1543IN is designed to run from a 5v power rail.  The SPI inputs on the TLC1543IN are compatible with 3.3v signaling, but the outputs are driven to 5v.  Simple circuitry is utilized to ensure that the voltage presented to the Raspberry Pi does not exceed 3.3v.</p>
 
+<h2>
+<a name="temperature-control" class="anchor" href="#temperature-control"><span class="octicon octicon-link"></span></a>Temperature Control</h2>
+
+<p>Temperature control is achieved via a motorized needle valve which limits the flow of propane to the burner.  The propane pressure regulator is still required and the main temperature knob present on the smoker should still be utilized as a manual shutoff.  During the smoking process, the main temperature knob should be left fully open so that the needle valve will be the limiting component.</p>
+
+<p>A multi-turn servo is physically attached to the handle on the needle valve.  The Raspberry Pi's PWM output is used to control the servo.  Servo signaling is not true PWM as neither the duty cycle nor the frequency of the signal matters.  The control mechanism of the signaling is derived solely from the positive pulse width of the signal.  Despite the fact that the servo control signal isn't truly a PWM signal, a PWM peripheral on the processor is fully capable of driving the servo.</p>
+
+<p>The control signals to a servo are not standardized, so on different models of servos, the same pulse widths will result in different physical positions of the servo.  Each model of servo will need to be tested when used in this project.  Testing should be done to determine when the servo is at its physical limits so that the servo will not be instructed to a position beyond its capabilities.  Additional testing is also needed to determine when the servo is at the physical limits of the needle valve.</p>
+
 <pre><code>$ cd your_repo_root/repo_name
 $ git fetch origin
 $ git checkout gh-pages
