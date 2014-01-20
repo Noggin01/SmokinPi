@@ -1,0 +1,211 @@
+# depslib dependency file v1.0
+1390083034 source:/home/pi/Projects/SmokinPi/main.c
+	<stdio.h>
+	<stdlib.h>
+	<pthread.h>
+	"thermistor.h"
+	"tlc1543.h"
+	"servo.h"
+	"app.h"
+	"main.h"
+	"logging.h"
+
+1390076119 /home/pi/Projects/SmokinPi/thermistor.h
+
+1390146107 source:/home/pi/Projects/SmokinPi/servo.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<string.h>
+	<pigpio.h>
+	"servo.h"
+	"main.h"
+	"app.h"
+
+1389744885 /home/pi/Projects/SmokinPi/wiringPi/wiringPi.h
+
+1389744885 /home/pi/Projects/SmokinPi/wiringPi/wiringPiSPI.h
+
+1390146807 source:/home/pi/Projects/SmokinPi/app.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<unistd.h>
+	<pthread.h>
+	"main.h"
+	"thermistor.h"
+	"tlc1543.h"
+	"servo.h"
+	"app.h"
+
+1390011511 source:/home/pi/Projects/SmokinPi/filter.c
+	"filter.h"
+	"main.h"
+
+1390011619 /home/pi/Projects/SmokinPi/filter.h
+	<stdint.h>
+	"main.h"
+
+1390076189 /home/pi/Projects/SmokinPi/main.h
+	<stdint.h>
+	<pthread.h>
+	"tlc1543.h"
+	"thermistor.h"
+
+1390076197 /home/pi/Projects/SmokinPi/tlc1543.h
+	<stdint.h>
+
+1390076253 /home/pi/Projects/SmokinPi/servo.h
+
+1390080426 /home/pi/Projects/SmokinPi/app.h
+
+1390146174 source:/home/pi/Projects/SmokinPi/thermistor.c
+	<stdio.h>
+	<stdlib.h>
+	<pthread.h>
+	<time.h>
+	<string.h>
+	"main.h"
+	"thermistor.h"
+	"tlc1543.h"
+	"filter.h"
+	"app.h"
+
+1390184065 source:/home/pi/Projects/SmokinPi/tlc1543.c
+	<stdio.h>
+	<string.h>
+	<unistd.h>
+	"tlc1543.h"
+	"main.h"
+	<wiringPi.h>
+	<wiringPiSPI.h>
+
+1389744885 source:/home/pi/Projects/SmokinPi/wiringPi/piThread.c
+	<pthread.h>
+	"wiringPi.h"
+
+1389744885 source:/home/pi/Projects/SmokinPi/wiringPi/wiringPi.c
+	<stdio.h>
+	<stdarg.h>
+	<stdint.h>
+	<stdlib.h>
+	<ctype.h>
+	<poll.h>
+	<unistd.h>
+	<errno.h>
+	<string.h>
+	<time.h>
+	<fcntl.h>
+	<pthread.h>
+	<sys/time.h>
+	<sys/mman.h>
+	<sys/stat.h>
+	<sys/wait.h>
+	<sys/ioctl.h>
+	"wiringPi.h"
+
+1389744885 source:/home/pi/Projects/SmokinPi/wiringPi/wiringPiSPI.c
+	<stdint.h>
+	<fcntl.h>
+	<errno.h>
+	<string.h>
+	<sys/ioctl.h>
+	<linux/spi/spidev.h>
+	"wiringPi.h"
+	"wiringPiSPI.h"
+
+1389744885 source:/home/pi/Projects/SmokinPi/wiringPi/piHiPri.c
+	<sched.h>
+	<string.h>
+	"wiringPi.h"
+
+1389557302 source:/home/pi/Projects/SmokinPi/pigpio/command.c
+	<stdio.h>
+	<string.h>
+	<stdarg.h>
+	<stdlib.h>
+	<ctype.h>
+	"pigpio.h"
+	"command.h"
+
+1389557302 /home/pi/Projects/SmokinPi/pigpio/pigpio.h
+	<stdint.h>
+	<pthread.h>
+	<stdio.h>
+	<pigpio.h>
+
+1389557302 /home/pi/Projects/SmokinPi/pigpio/command.h
+	<stdio.h>
+	<string.h>
+	"pigpio.h"
+
+1389557302 source:/home/pi/Projects/SmokinPi/pigpio/pig2vcd.c
+	<stdio.h>
+	<stdlib.h>
+	<stdint.h>
+	<unistd.h>
+	<time.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<sys/time.h>
+	<fcntl.h>
+	"pigpio.h"
+
+1389930134 source:/home/pi/Projects/SmokinPi/pigpio/pigpio.c
+	<stdio.h>
+	<string.h>
+	<stdlib.h>
+	<stdint.h>
+	<stdarg.h>
+	<ctype.h>
+	<syslog.h>
+	<poll.h>
+	<unistd.h>
+	<signal.h>
+	<errno.h>
+	<string.h>
+	<time.h>
+	<fcntl.h>
+	<limits.h>
+	<pthread.h>
+	<sys/time.h>
+	<sys/mman.h>
+	<sys/types.h>
+	<sys/stat.h>
+	<sys/file.h>
+	<sys/socket.h>
+	<arpa/inet.h>
+	<sys/select.h>
+	"pigpio.h"
+	"command.h"
+
+1389557302 source:/home/pi/Projects/SmokinPi/pigpio/pigpiod.c
+	<sys/types.h>
+	<sys/stat.h>
+	<pwd.h>
+	<stdio.h>
+	<stdlib.h>
+	<fcntl.h>
+	<errno.h>
+	<unistd.h>
+	<syslog.h>
+	<string.h>
+	<signal.h>
+	<ctype.h>
+	"pigpio.h"
+	"command.h"
+
+1390165671 source:/home/pi/Projects/SmokinPi/logging.c
+	<stdio.h>
+	<stdlib.h>
+	<pthread.h>
+	<time.h>
+	<string.h>
+	<unistd.h>
+	<signal.h>
+	"main.h"
+	"logging.h"
+	"thermistor.h"
+
+1390076246 /home/pi/Projects/SmokinPi/logging.h
+
