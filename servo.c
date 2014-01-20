@@ -23,7 +23,7 @@ void Servo_Service( void *shared_data_address )
 {
 #define MAX_POSITION			1100
 #define MIN_POSITION			600
-#define MIN_POSITION_FOR_FIRE	650
+#define MIN_POSITION_FOR_FIRE	600
 #define INCREMENT				20
 #define DESIRED_TEMPERATURE		250.0
 
