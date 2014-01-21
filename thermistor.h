@@ -1,13 +1,18 @@
-#define NBR_OF_THERMISTORS			(NBR_ADC_CHANNELS - 1)
-#define NBR_OF_COEFFICIENTS			5
+#ifndef _THERMISTOR_H
+#define _THERMISTOR_H
 
-typedef enum 
-{  
+#define NBR_OF_THERMISTORS			(NBR_ADC_CHANNELS - 1)
+#define NBR_OF_COEFFICIENTS			6
+
+typedef enum
+{
 	CDDT_THERMISTOR,
 	TAYLOR_THERMISTOR,
-	
+
 	NBR_THERMISTOR_TYPES,
 } thermistor_types;
 
 void Thermistor_Init( void );
 void Thermistor_Service( void *shared_data_address );
+
+#endif
