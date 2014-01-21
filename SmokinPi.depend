@@ -1,5 +1,5 @@
 # depslib dependency file v1.0
-1390083034 source:/home/pi/Projects/SmokinPi/main.c
+1390189639 source:/home/pi/Projects/SmokinPi/main.c
 	<stdio.h>
 	<stdlib.h>
 	<pthread.h>
@@ -10,9 +10,9 @@
 	"main.h"
 	"logging.h"
 
-1390076119 /home/pi/Projects/SmokinPi/thermistor.h
+1390189639 /home/pi/Projects/SmokinPi/thermistor.h
 
-1390146107 source:/home/pi/Projects/SmokinPi/servo.c
+1390189742 source:/home/pi/Projects/SmokinPi/servo.c
 	<stdio.h>
 	<stdlib.h>
 	<stdint.h>
@@ -26,7 +26,7 @@
 
 1389744885 /home/pi/Projects/SmokinPi/wiringPi/wiringPiSPI.h
 
-1390146807 source:/home/pi/Projects/SmokinPi/app.c
+1390189639 source:/home/pi/Projects/SmokinPi/app.c
 	<stdio.h>
 	<stdlib.h>
 	<stdint.h>
@@ -46,20 +46,20 @@
 	<stdint.h>
 	"main.h"
 
-1390076189 /home/pi/Projects/SmokinPi/main.h
+1390189639 /home/pi/Projects/SmokinPi/main.h
 	<stdint.h>
 	<pthread.h>
 	"tlc1543.h"
 	"thermistor.h"
 
-1390076197 /home/pi/Projects/SmokinPi/tlc1543.h
+1390189639 /home/pi/Projects/SmokinPi/tlc1543.h
 	<stdint.h>
 
-1390076253 /home/pi/Projects/SmokinPi/servo.h
+1390189639 /home/pi/Projects/SmokinPi/servo.h
 
-1390080426 /home/pi/Projects/SmokinPi/app.h
+1390189639 /home/pi/Projects/SmokinPi/app.h
 
-1390146174 source:/home/pi/Projects/SmokinPi/thermistor.c
+1390263944 source:/home/pi/Projects/SmokinPi/thermistor.c
 	<stdio.h>
 	<stdlib.h>
 	<pthread.h>
@@ -68,10 +68,9 @@
 	"main.h"
 	"thermistor.h"
 	"tlc1543.h"
-	"filter.h"
 	"app.h"
 
-1390184065 source:/home/pi/Projects/SmokinPi/tlc1543.c
+1390189639 source:/home/pi/Projects/SmokinPi/tlc1543.c
 	<stdio.h>
 	<string.h>
 	<unistd.h>
@@ -195,7 +194,7 @@
 	"pigpio.h"
 	"command.h"
 
-1390165671 source:/home/pi/Projects/SmokinPi/logging.c
+1390189639 source:/home/pi/Projects/SmokinPi/logging.c
 	<stdio.h>
 	<stdlib.h>
 	<pthread.h>
@@ -207,5 +206,5 @@
 	"logging.h"
 	"thermistor.h"
 
-1390076246 /home/pi/Projects/SmokinPi/logging.h
+1390189639 /home/pi/Projects/SmokinPi/logging.h
 

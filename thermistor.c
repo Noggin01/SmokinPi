@@ -6,7 +6,6 @@
 #include "main.h"
 #include "thermistor.h"
 #include "tlc1543.h"
-#include "filter.h"
 #include "app.h"
 
 /* *** Constants *** */
