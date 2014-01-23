@@ -98,11 +98,11 @@ void Logging_Service( void *shared_data_address )
          tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, local_servo_position);
 
       // Write the temperature for each of the probes on the first 5 channels
-     // for (i = 0; i < 5; i++)
+      for (i = 0; i < NBR_OF_THERMISTORS; i++)
          fprintf(write_ptr, ",%4.2f", local_temperature_deg_f[0]);
 
       // Write the ADC value for the remaining probes.  Do not initialize i to 0
-      for (i = 5; i < NBR_OF_THERMISTORS; i++)
+      for (i = 0; i < NBR_OF_THERMISTORS; i++)
          fprintf(write_ptr, ",%d", local_adc_results[i]);
 
       fwrite("\n", 1, 1, write_ptr);      // Append a new line to the file

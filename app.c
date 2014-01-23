@@ -49,10 +49,17 @@ void App_Init( void )
 
 }
 
+/**************************************************************************
+This is where the magic happens.  The ADC measurements are being taken
+in the background, the logging is happening in the background.  This 
+service routine is called from the main loop periodically and is
+responsible for setting the desired setpoint, executing the PID, and 
+setting the destination for the servo motor.
+**************************************************************************/
 void App_Service( void )
 {
-	while (1)
-	{
-        sleep(1);
-	}
+	// Get the mutex
+	// copy the data
+	// calculate the PID
+	// control the servo
 }

@@ -44,6 +44,8 @@ void Tlc1543_Service( void *shared_data_address )
 
 	while (1)
 	{
+		usleep(10000);	// Sleep for 10mS
+
 		// start i at 1 as we've already sent the command to read channel 0
 		for (i = 1; i < NBR_ADC_CHANNELS; i++)
 		{

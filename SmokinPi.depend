@@ -10,7 +10,7 @@
 	"main.h"
 	"logging.h"
 
-1390189639 /home/pi/Projects/SmokinPi/thermistor.h
+1390277038 /home/pi/Projects/SmokinPi/thermistor.h
 
 1390189742 source:/home/pi/Projects/SmokinPi/servo.c
 	<stdio.h>
@@ -59,7 +59,7 @@
 
 1390189639 /home/pi/Projects/SmokinPi/app.h
 
-1390263944 source:/home/pi/Projects/SmokinPi/thermistor.c
+1390277018 source:/home/pi/Projects/SmokinPi/thermistor.c
 	<stdio.h>
 	<stdlib.h>
 	<pthread.h>
@@ -194,7 +194,7 @@
 	"pigpio.h"
 	"command.h"
 
-1390189639 source:/home/pi/Projects/SmokinPi/logging.c
+1390266501 source:/home/pi/Projects/SmokinPi/logging.c
 	<stdio.h>
 	<stdlib.h>
 	<pthread.h>
