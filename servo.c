@@ -7,9 +7,9 @@
 #include "main.h"
 #include "app.h"
 
-void Servo_Init( void )
+int Servo_Init( void )
 {
-	int32_t result;
+	int result;
 
 	gpioTerminate();
 	result = gpioInitialise();
@@ -17,9 +17,11 @@ void Servo_Init( void )
 		printf("Failure initializing PiGPIO  - %d", result);
 	else
 		printf("Initializing Servo\n");
+
+	return result;
 }
 
-void Servo_Service( void *shared_data_address )
+void Servo_Service( int position )
 {
 #define INCREMENT				20
 #define DESIRED_TEMPERATURE		250.0
@@ -29,6 +31,10 @@ void Servo_Service( void *shared_data_address )
 	float local_cabinet_temperature;
 	float temperature_error;
 	uint8_t enable_servo = false;
+
+	static int last_position = -1;
+	static unsigned char position_known = false;
+	static int timer = 0;
 
 	while (1)
 	{

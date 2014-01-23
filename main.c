@@ -43,10 +43,16 @@ static void Main_Signal_Handler( int signal );
 
 void Main_Init_Hardware( void )
 {
-	Tlc1543_Init();
+	if (Servo_Init() < 1)
+    {
+        printf("Unable to obtain servo control.\n");
+        printf("Run with sudo command?\n");
+        printf("Cancel pigpio?  (sudo killall pigpiod)\n");
+        _exit();
+    }
+    Tlc1543_Init();
 	Thermistor_Init();
-	Servo_Init();
-    App_Init();
+	App_Init();
     Logging_Init();
 }
 
