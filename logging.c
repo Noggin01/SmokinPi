@@ -80,15 +80,11 @@ void Logging_Service( void *shared_data_address )
    {
       // Obtain a lock to the shared data, create a local
       // copy of the data, then release the lock
-      pthread_mutex_lock(&mutex);
-      memcpy( (uint8_t*)local_temperature_deg_f,
-             (uint8_t*)p_shared_data->temp_deg_f,
-            sizeof(local_temperature_deg_f));
-      memcpy( (uint8_t*)local_adc_results,
-            (uint8_t*)p_shared_data->adc_results,
-            sizeof(local_adc_results));
-      local_servo_position = p_shared_data->servo_position;
-      pthread_mutex_unlock(&mutex);
+		pthread_mutex_lock(&mutex);
+		memcpy( (uint8_t*)local_temperature_deg_f, (uint8_t*)p_shared_data->temp_deg_f, sizeof(local_temperature_deg_f));
+		memcpy( (uint8_t*)local_adc_results, (uint8_t*)p_shared_data->adc_results, sizeof(local_adc_results));
+		local_servo_position = p_shared_data->servo_position;
+		pthread_mutex_unlock(&mutex);
 
       // Get the current time, build the timestamp and write it to the file.  Might
       // as well write the servo position as well.  Good a time as any.
@@ -99,14 +95,11 @@ void Logging_Service( void *shared_data_address )
 
       // Write the temperature for each of the probes on the first 5 channels
       for (i = 0; i < NBR_OF_THERMISTORS; i++)
-         fprintf(write_ptr, ",%4.2f", local_temperature_deg_f[0]);
-
-      // Write the ADC value for the remaining probes.  Do not initialize i to 0
-      for (i = 0; i < NBR_OF_THERMISTORS; i++)
-         fprintf(write_ptr, ",%d", local_adc_results[i]);
+         fprintf(write_ptr, ",%4.2f", local_temperature_deg_f[i]);
 
       fwrite("\n", 1, 1, write_ptr);      // Append a new line to the file
-
+      fflush(write_ptr);						// Force the write to disk
+      
       Logging_Full_Sleep(15);      // Delay 15 seconds before writing the next log entry
    }
 }

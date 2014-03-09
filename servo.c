@@ -3,111 +3,78 @@
 #include <stdint.h>
 #include <string.h>
 #include <pigpio.h>
+#include <math.h>
 #include "servo.h"
 #include "main.h"
 #include "app.h"
 
+
+/*******************************************************************************
+This function initializes the servo by first terminating the pigpio C library 
+functions if they are enabled, and then initializing them again.
+
+Note:  gpioInitialise() requires the program to be run as sudo
+*******************************************************************************/
 int Servo_Init( void )
 {
 	int result;
 
-	gpioTerminate();
 	result = gpioInitialise();
 	if (result < 1)
-		printf("Failure initializing PiGPIO  - %d", result);
+	{
+		gpioTerminate();
+		result = gpioInitialise();
+	}
+	
+	if (result < 1)
+		printf("Failure initializing PiGPIO  - %d\n", result);
 	else
 		printf("Initializing Servo\n");
 
 	return result;
 }
 
-void Servo_Service( int position )
+void Servo_Shutdown( void )
 {
-#define INCREMENT				20
-#define DESIRED_TEMPERATURE		250.0
+	gpioTerminate();
+}
 
-	shared_data_type* p_shared_data = (shared_data_type*)shared_data_address;
-	uint16_t local_servo_position = (MAX_POSITION - MIN_POSITION) / 2 + MIN_POSITION;
-	float local_cabinet_temperature;
-	float temperature_error;
-	uint8_t enable_servo = false;
-
-	static int last_position = -1;
+/*******************************************************************************
+This function accepts a position command from the main loop and moves to that
+position.  If the current position of the servo is unknown, the servo's motion
+will be enabled for 5 seconds.  If the servo's position is known, then the
+motion will be enabled for 
+*******************************************************************************/
+void Servo_Service( int position_cmd )
+{
 	static unsigned char position_known = false;
-	static int timer = 0;
+	static int last_position_cmd;
+	static int timer_us = 0;
+	int distance;
 
-	while (1)
+	if (!position_known)
 	{
-		Delay_Seconds(5);
-
-		pthread_mutex_lock(&mutex);
-		local_cabinet_temperature = p_shared_data->temp_deg_f[0];
-		pthread_mutex_unlock(&mutex);
-
-		temperature_error = DESIRED_TEMPERATURE - local_cabinet_temperature;
-
-		if (temperature_error > 50.0)
-		{
-			if (local_servo_position == MAX_POSITION)
-				enable_servo = false;
-			else
-			{
-				enable_servo = true;
-				local_servo_position = MAX_POSITION;
-			}
-		}
-		else if (temperature_error < -50.0)
-		{
-			if (local_servo_position == MIN_POSITION_FOR_FIRE)
-				enable_servo = false;
-			else
-			{
-				enable_servo = true;
-				local_servo_position = MIN_POSITION_FOR_FIRE;
-			}
-		}
-		else if ((temperature_error < 1.0f) && (temperature_error > -1.0f))
-		{
-			enable_servo = false;
-		}
-		else if (temperature_error > 0)	// Not hot enough
-		{
-			if (local_servo_position == MAX_POSITION)
-				enable_servo = false;
-			else
-			{
-				enable_servo = true;
-				local_servo_position += INCREMENT;
-			}
-		}
-		else if (temperature_error < 0)	// Too hot
-		{
-			if (local_servo_position == MIN_POSITION_FOR_FIRE)
-				enable_servo = false;
-			else
-			{
-				enable_servo = true;
-				local_servo_position -= INCREMENT;
-				if (local_servo_position < MIN_POSITION_FOR_FIRE)
-					local_servo_position = MIN_POSITION_FOR_FIRE;
-			}
-		}
-
-
-		if (local_servo_position > MAX_POSITION)
-			local_servo_position = MAX_POSITION;
-		else if (local_servo_position < MIN_POSITION)
-			local_servo_position = MIN_POSITION;
-
-		printf("Servo:  %d %d %4.2f\n", local_servo_position, enable_servo, temperature_error);
-
-		if (!enable_servo)
-			gpioServo( 18, 0 );
-		else
-			gpioServo( 18, local_servo_position );
-
-		pthread_mutex_lock(&mutex);
-		p_shared_data->servo_position = local_servo_position;
-		pthread_mutex_unlock(&mutex);
+		timer_us = 5000000;	// 5 seconds
+		position_known = true;
 	}
+	else if (last_position_cmd != position_cmd)
+	{
+		distance = abs(last_position_cmd - position_cmd);
+		timer_us = distance * 8000;
+	}
+
+	if (position_cmd < MIN_PHYSICAL_POSITION)
+		position_cmd = MIN_PHYSICAL_POSITION;
+	if (position_cmd > MAX_PHYSICAL_POSITION)
+		position_cmd = MAX_PHYSICAL_POSITION;
+	
+	if (timer_us <= 0)
+		gpioServo( 18, 0 );
+	else
+	{
+		gpioServo( 18, position_cmd );
+		timer_us -= MAIN_LOOP_TIME_US;
+	}
+
+	last_position_cmd = position_cmd;
 }

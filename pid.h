@@ -9,3 +9,6 @@ typedef struct
     double control;
 } pid_type;
  
+
+void Pid_Reset(pid_type* pid);
+void Pid_Update(pid_type* pid, double current_error, double dt);

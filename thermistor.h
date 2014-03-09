@@ -1,8 +1,10 @@
 #ifndef _THERMISTOR_H
 #define _THERMISTOR_H
 
+#include <stdint.h>
+
 #define NBR_OF_THERMISTORS			(NBR_ADC_CHANNELS - 1)
-#define NBR_OF_COEFFICIENTS			6
+#define NBR_OF_COEFFICIENTS		6
 
 typedef enum
 {
@@ -13,6 +15,6 @@ typedef enum
 } thermistor_types;
 
 void Thermistor_Init( void );
-void Thermistor_Service( void *shared_data_address );
+void Thermistor_Service( uint16_t *p_adc_data, float *p_temperature_data );
 
 #endif

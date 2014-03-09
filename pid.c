@@ -15,7 +15,7 @@ void Pid_Update(pid_type* pid, double current_error, double dt)
     double d_term;
 
     // integration with windup guarding
-    pid->int_error += (curr_error * dt);
+    pid->int_error += (current_error * dt);
     if (pid->int_error < -(pid->windup_guard))
         pid->int_error = -(pid->windup_guard);
     else if (pid->int_error > pid->windup_guard)
@@ -23,12 +23,12 @@ void Pid_Update(pid_type* pid, double current_error, double dt)
 
     // differentiation
     if (dt != 0)
-        diff = ((curr_error - pid->prev_error) / dt);
+        diff = ((current_error - pid->prev_error) / dt);
     else
         dt = 0;
 
     // scaling
-    p_term = (pid->proportional_gain * curr_error);
+    p_term = (pid->proportional_gain * current_error);
     i_term = (pid->integral_gain     * pid->int_error);
     d_term = (pid->derivative_gain   * diff);
 

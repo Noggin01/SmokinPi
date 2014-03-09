@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include "tlc1543.h"
-#include "main.h"
 #include <wiringPi.h>
 #include <wiringPiSPI.h>
+#include "tlc1543.h"
+#include "main.h"
 
 /* *** Defined Values *** */
 #define SPI_CHANNEL     0
@@ -40,7 +40,7 @@ void Tlc1543_Service( void *shared_data_address )
 	uint8_t i;
 	uint16_t result;
 	uint16_t channel_adc_result[NBR_ADC_CHANNELS];
-    shared_data_type* p_shared_data = (shared_data_type*)shared_data_address;
+	shared_data_type* p_shared_data = (shared_data_type*)shared_data_address;
 
 	while (1)
 	{

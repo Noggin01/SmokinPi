@@ -3,13 +3,16 @@
 #include <pthread.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
+#include <ncurses.h>
 #include "main.h"
 #include "thermistor.h"
 #include "tlc1543.h"
 #include "app.h"
+#include "cmd_line.h"
 
 /* *** Constants *** */
-
+#define nan					(1/0)
 /* *** Types *** */
 
 /* *** Global Variables *** */
@@ -20,7 +23,7 @@ const static double conversion_coefficients[NBR_THERMISTOR_TYPES][NBR_OF_COEFFIC
 };
 
 /* *** Function Declarations *** */
-float Thermistor_Convert_Adc_To_Deg_x10( uint16_t adc, uint8_t i );
+float Thermistor_Convert_Adc_To_Deg_F( uint16_t adc, uint8_t i );
 
 /**************************************************************************
 Initialize thermistor data to nan (not a number) so that the service 
@@ -28,78 +31,44 @@ routine will recognize that the data isn't valid
 **************************************************************************/
 void Thermistor_Init( void )
 {
-	float local_temperature_deg_f[NBR_OF_THERMISTORS];
-	
-	for (int i = 0; i < NBR_OF_THERMISTORS; i++)
-		local_temperature_deg_f[i] = nan;
-
-	pthread_mutex_lock(&mutex);
-	memcpy( (uint8_t*)p_shared_data->temp_deg_f,
-			(uint8_t*)local_temperature_deg_f,
-			sizeof(p_shared_data->temp_deg_f));
-	pthread_mutex_unlock(&mutex);
-
+	// Aint got shit to do right now
 	printf("Thermistor data initialized\n");
 }
 
 /**************************************************************************
 When new ADC data is available, convert it to temperature in Deg F
 **************************************************************************/
-void Thermistor_Service( void *shared_data_address )
+void Thermistor_Service( uint16_t *p_adc_data, float *p_temperature_data )
 {
+	#define PRINT_DELAY					(1000000/MAIN_LOOP_TIME_US)	/* 1 seconds */
 	uint8_t i;
-	uint16_t raw_adc_data;
 	float degf;
-	uint16_t local_adc_results[NBR_ADC_CHANNELS];
-	float local_temperature_deg_f[NBR_OF_THERMISTORS];
-	uint16_t local_servo_position;
-
-	shared_data_type* p_shared_data = (shared_data_type*)shared_data_address;
-
-	while (1)
+	int y, x;
+	static int timer = 0;
+	static int initialized = 0;
+	
+	// Convert each of the ADC data points to temperature data
+	for (i = 0; i < NBR_OF_THERMISTORS; i++)
 	{
-		// Wait for new adc data to be available.  Check the flag periodically.
-		#warning convert this to using a signal instead of polling the flag
-		do { 
-			pthread_mutex_lock(&mutex);
-			memcpy( (uint8_t*)local_adc_results,
-					(uint8_t*)p_shared_data->adc_results,
-					sizeof(local_adc_results));
-			p_shared_data->adc_data_available = false;
-			local_servo_position = p_shared_data->servo_position;
-			pthread_mutex_unlock(&mutex);
+		degf = Thermistor_Convert_Adc_To_Deg_F( p_adc_data[i], i );
+		if (initialized == 1)
+			p_temperature_data[i] = ((p_temperature_data[i] * 9.0) + degf)/10.0;
+		else
+			p_temperature_data[i] = degf;
+	}
 
-			if (!p_shared_data->adc_data_available)
-				usleep(100);
-		} while (!p_shared_data->adc_data_available);
-
-		// Convert each of the ADC data points to temperature data
+	initialized = 1;
+	
+	// Print temperature information to the console for easy monitoring
+	if (timer++ >= PRINT_DELAY)
+	{
+		timer = 0;
+		getyx(stdscr, y, x);
+		move( 0, 0 );
 		for (i = 0; i < NBR_OF_THERMISTORS; i++)
-		{
-			raw_adc_data = local_adc_results[i];
-			degf = Thermistor_Convert_Adc_To_Deg_x10( raw_adc_data, i );
-			if (local_temperature_deg_f[i] != nan)
-			{
-				local_temperature_deg_f[i] *= 9;
-				local_temperature_deg_f[i] += degf;
-				local_temperature_deg_f[i] /= 10;
-			}
-			else
-				local_temperature_deg_f[i] = degf;
-
-			// Print temperature information to the console for easy monitoring
-			printf("%2u:%4.2f ", i, local_temperature_deg_f[i]);
-		}
-		
-		// Print the servo position to the console for easy monitoring
-		printf( "%4u\n", local_servo_position );
-
-		pthread_mutex_lock(&mutex);
-		memcpy( (uint8_t*)p_shared_data->temp_deg_f,
-				(uint8_t*)local_temperature_deg_f,
-				sizeof(p_shared_data->temp_deg_f));
-		p_shared_data->adc_data_available = false;
-		pthread_mutex_unlock(&mutex);
+			printw("%2u:%4.2f", i, p_temperature_data[i]);
+		printw("          \n");
+		move( y, x );
 	}
 }
 
@@ -107,17 +76,17 @@ void Thermistor_Service( void *shared_data_address )
 Determine which type of thermistor each this conversion is for.  Then calculate the 
 temperature using a polynomial forumla obtained with ADC vs Temperature plots in Excel.
 ****************************************************************************************/
-float Thermistor_Convert_Adc_To_Deg_x10( uint16_t adc, uint8_t thermistor_index )
+float Thermistor_Convert_Adc_To_Deg_F( uint16_t adc, uint8_t thermistor_index )
 {
 	double temp_deg_f;
 	unsigned int thermistor_type;
 
 	switch (thermistor_index)
 	{
-		case 0:
-		case 1:
-			thermistor_type = TAYLOR_THERMISTOR;
-			break;
+//		case 0:
+//		case 1:
+//			thermistor_type = TAYLOR_THERMISTOR;
+//			break;
 
 		default:
 			thermistor_type = CDDT_THERMISTOR;

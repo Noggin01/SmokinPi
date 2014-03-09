@@ -1,6 +1,11 @@
 void App_Init( void );
-void App_Service( void );
+void App_Service( void* shared_data_address );
 
-int Delay_Seconds( unsigned int delay_seconds );
-int Delay_Milliseconds( unsigned int delay_milliseconds );
-int Delay_Microseconds( unsigned int delay_microseconds );
+void App_Force_Cabinet_Temperature( float temp_deg_f );
+void App_Force_Servo_Position( int position );
+
+void App_Set_Kp( double gain );
+void App_Set_Ki( double gain );
+void App_Set_Kd( double gain );
+void App_Set_Kl( double limit );
+
