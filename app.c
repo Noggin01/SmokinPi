@@ -29,9 +29,9 @@ void App_Set_Kl( double limit ){ g_pid.windup_guard = limit; }
 void App_Init( void )
 {
 	Pid_Reset( &g_pid );
-	g_pid.windup_guard = 50.0;
-	g_pid.proportional_gain = 100.0;
-	g_pid.integral_gain = 1.0;
+	g_pid.windup_guard = 500000.0;
+	g_pid.proportional_gain = 5.0;
+	g_pid.integral_gain = 0.0002;
 	g_pid.derivative_gain = 0.0;
 }
 
@@ -90,21 +90,21 @@ void App_Service( void* shared_data_address )
 		print_timer = 0;
 		getyx(stdscr, y, x);
 		move( 3, 50 );
-		printw( "Tmp Err:  %4.3f      ", temperature_error );
+		printw( "Tmp Err:  %4.5f      ", temperature_error );
 		move( 4, 50 );
-		printw( "     KP:  %4.3f      ", g_pid.proportional_gain );
+		printw( "     KP:  %4.5f      ", g_pid.proportional_gain );
 		move( 5, 50 );
-		printw( "     KI:  %4.3f      ", g_pid.integral_gain );
+		printw( "     KI:  %4.5f      ", g_pid.integral_gain );
 //		move( 5, 50 );
-//		printw( "     KD:  %4.3f      ", g_pid.derivative_gain );
+//		printw( "     KD:  %4.5f      ", g_pid.derivative_gain );
 		move( 6, 50 );
-		printw( "     KL:  %4.3f      ", g_pid.windup_guard );
+		printw( "     KL:  %4.5f      ", g_pid.windup_guard );
 		move( 7, 50 );
-		printw( "Pro Err:  %4.3f      ", temperature_error * g_pid.proportional_gain );
+		printw( "Pro Err:  %4.5f      ", temperature_error * g_pid.proportional_gain );
 		move( 8, 50 );
-		printw( "Int Err:  %4.3f      ", g_pid.int_error );
+		printw( "Int Err:  %4.5f      ", g_pid.int_error );
 		move( 9, 50 );
-		printw( " Output:  %4.3f      ", g_pid.control );
+		printw( " Output:  %4.5f      ", g_pid.control );
 		move( 10, 50 );
 		printw( "  Servo:  %d         ", servo_position);
 		move( y, x );
