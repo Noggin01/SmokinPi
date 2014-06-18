@@ -17,38 +17,45 @@ Note:  gpioInitialise() requires the program to be run as sudo
 *******************************************************************************/
 int Servo_Init( void )
 {
-	int result;
+	int result = 0;
+	char cmd[50];
+	int response;
 
-	result = gpioInitialise();
-	if (result < 1)
+	FILE *servo = fopen("/dev/pigpio", "w");
+
+	if (servo == NULL)
 	{
-		gpioTerminate();
-		result = gpioInitialise();
-	}
-	
-	if (result < 1)
-		printf("Failure initializing PiGPIO  - %d\n", result);
-	else
-		printf("Initializing Servo\n");
-
-	return result;
-
-/* 	FILE *pipe = popen("/dev/pigpio", "w");
-
-	sleep(1);
-
-	if (pipe == NULL)
-	{
-		printf("Error opening pipe\n");
+		printf("Error opening file: /dev/pigpio - %s.%u\n", __FILE__, __LINE__);
 		result = -1;
 	}
 	else
-		printf("Pipe opened\n");
-//	else
-//		fputs("s 18 0", pipe);
-	
-	pclose(pipe); */
+	{
+		fprintf(servo, "s 18 40\n");
+		fflush(servo);
+		fclose(servo);
 
+		// read result from pigout
+		servo = fopen("/dev/pigout", "r");
+		if (servo == NULL)
+		{
+			printf("Error opening file: /dev/pigout - %s.%u\n", __FILE__, __LINE__);
+			result = -1;
+		}
+		else
+		{
+			fscanf(servo, "%d", &response);
+			if (response == 0)	// On a successful write to pigpio, pigout should return 0
+				result = 1;
+			fclose(servo);
+		}
+	}
+
+	if (result == 1)
+		printf("Servo control is happy!\n");
+	else
+		printf("Servo control is not happy :(\n");
+
+	return result;
 }
 
 void Servo_Shutdown( void )

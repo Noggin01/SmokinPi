@@ -64,6 +64,9 @@ void Main_Init_Hardware( void )
 		_exit(3);
 	}
 
+	printf("Fixme %s.%u\n", __FILE__, __LINE__);
+	_exit(3);
+
 	Tlc1543_Init();
 	Thermistor_Init();
 	App_Init();
