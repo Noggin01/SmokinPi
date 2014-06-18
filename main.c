@@ -56,16 +56,18 @@ void Main_Init_Hardware( void )
 	int result;
 	
 	result = Servo_Init();
-	if (result < 1)
+	if (result < 0)
 	{
 		printf("Unable to obtain servo control.\n");
 		printf("Run with sudo command?\n");
 		printf("Cancel pigpio?  (sudo killall pigpiod)\n");
 		_exit(3);
 	}
+
 	Tlc1543_Init();
 	Thermistor_Init();
 	App_Init();
+
 	Logging_Init();
 	Cmd_Line_Init( &shared_data );
 }

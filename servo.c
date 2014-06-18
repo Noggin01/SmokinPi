@@ -32,6 +32,23 @@ int Servo_Init( void )
 		printf("Initializing Servo\n");
 
 	return result;
+
+/* 	FILE *pipe = popen("/dev/pigpio", "w");
+
+	sleep(1);
+
+	if (pipe == NULL)
+	{
+		printf("Error opening pipe\n");
+		result = -1;
+	}
+	else
+		printf("Pipe opened\n");
+//	else
+//		fputs("s 18 0", pipe);
+	
+	pclose(pipe); */
+
 }
 
 void Servo_Shutdown( void )

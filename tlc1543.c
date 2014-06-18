@@ -1,21 +1,36 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-#include <wiringPi.h>
-#include <wiringPiSPI.h>
+#include <pigpio.h>
 #include "tlc1543.h"
 #include "main.h"
 
 /* *** Defined Values *** */
 #define SPI_CHANNEL     0
+#define SPI_SPEED		2000000
+#define SPI_MODE		0
+
+/*************
+Spi mode table
+Mode POL PHA
+ 0    0   0
+ 1    0   1
+ 2    1   0
+ 3    1   1
+**************/
+
 
 /* *** Global Variables *** */
+ static int32_t g_spi_handle;
 
 /* *** Accessors *** */
 
 /*******************************************************************************
 Configure the wiringPi library to communicate via SPI at 2 MHz, channel 0, in
 order to use the TLC1543 11 channel, 10-bit ADC
+
+Prerequisite:  gpioInitialise() must have already been called
+
 *******************************************************************************/
 void Tlc1543_Init( void )
 {
@@ -23,12 +38,11 @@ void Tlc1543_Init( void )
 
 	printf("Initializing Tlc1543\n");
 
-	wiringPiSetup();
-	wiringPiSPISetup(SPI_CHANNEL, 2000000);
+	g_spi_handle = spiOpen(SPI_CHANNEL, SPI_SPEED, SPI_MODE);
 
 	// Send the command to start a conversion of channel 0 so that we have
 	// valid data when we enter the service routine
-	wiringPiSPIDataRW( SPI_CHANNEL, &cmd[0], sizeof(cmd) );
+	spiWrite(g_spi_handle, (char*)&cmd[0], sizeof(cmd));
 }
 
 /*******************************************************************************
@@ -36,7 +50,8 @@ Read each of the ADC channels and store the data in the appropriate storage loca
 *******************************************************************************/
 void Tlc1543_Service( void *shared_data_address )
 {
-	uint8_t cmd[2];
+	uint8_t write_cmd[2];
+	uint8_t read_data[2];
 	uint8_t i;
 	uint16_t result;
 	uint16_t channel_adc_result[NBR_ADC_CHANNELS];
@@ -49,17 +64,17 @@ void Tlc1543_Service( void *shared_data_address )
 		// start i at 1 as we've already sent the command to read channel 0
 		for (i = 1; i < NBR_ADC_CHANNELS; i++)
 		{
-			cmd[0] = i << 4;
-			cmd[1] = 0;
+			write_cmd[0] = i << 4;
+			write_cmd[1] = 0;
 
 			usleep(200);
-			wiringPiSPIDataRW( SPI_CHANNEL, &cmd[0], sizeof(cmd) );
+			spiXfer(g_spi_handle, (char*)&write_cmd, (char*)&read_data, sizeof(read_data));
 
 			// cmd now contains the value returned from the ADC which is the result
 			// of the ADC conversion of the previous channel.  Store the
 			// value in result so that we can shit it right by 6 bits as it is
 			// currently left adjusted
-			result = (cmd[0] << 8) + cmd[1];
+			result = (read_data[0] << 8) + read_data[1];
 			result = result >> 6;
 
 			// add the result to the data filter
@@ -69,13 +84,13 @@ void Tlc1543_Service( void *shared_data_address )
 		// at this point, we've sent the command to read the final channel,
 		// so now we need to send the command to read channel 0.  This will also
 		// let us read the value of the conversion of the latest channel
-		cmd[0] = 0;
-		cmd[1] = 0;
+		write_cmd[0] = 0;
+		write_cmd[1] = 0;
 
 		usleep(200);
-		wiringPiSPIDataRW( SPI_CHANNEL, &cmd[0], sizeof(cmd) );
+		spiXfer(g_spi_handle, (char*)&write_cmd, (char*)&read_data, sizeof(read_data));
 
-		result = (cmd[0] << 8) + cmd[1];
+		result = (read_data[0] << 8) + read_data[1];
 		result = result >> 6;
 
 		channel_adc_result[i-1] = result;
