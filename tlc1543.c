@@ -28,13 +28,10 @@ static int Tlc1543_Transfer( uint8_t* pData, int length );
 
 /* *** Accessors *** */
 
-/*******************************************************************************
-Configure the wiringPi library to communicate via SPI at 2 MHz, channel 0, in
-order to use the TLC1543 11 channel, 10-bit ADC
-
-Prerequisite:  gpioInitialise() must have already been called
-
-*******************************************************************************/
+/***************************************************************************************************
+Send command "0x00 0x00" to the tlc1543 to initiate a reading of channel 0. This will allow the 
+first read in the service routine to be valid data
+***************************************************************************************************/
 int Tlc1543_Init( void )
 {
 	uint8_t data[2] = { 0 };
@@ -44,15 +41,20 @@ int Tlc1543_Init( void )
 	return Tlc1543_Transfer( data, sizeof(data) );
 }
 
-/*******************************************************************************
-This function obtains the mutex for the PiGPIO pipes, writes the specified
-command to the pipe, and reads the result.  If the command is valid, the 
-dev/pigout pipe will return 0.
+/***************************************************************************************************
+This function obtains the mutex for the PiGPIO pipes, writes the specified command to the pipe, and 
+reads the result.  The result of the PiGPIO SPI transfer is in the following format:
+
+1. 	Result code in ASCII format.  On a failed transaction, the result code is a negative number. On
+	a successful transaction, the result code is the number of bytes available to read from the
+	pipe.
+2.	A carriage return follows the result code
+3.	If the result code is positive, individual data bytes in binary format
 
 Returns	-1 if the file pipes can't be opened
 		 0 if the response is non-zero
 		 1 if the response is zero
-*******************************************************************************/
+***************************************************************************************************/
 static int Tlc1543_Transfer( uint8_t* pData, int length )
 {
 	FILE *pigpio_write;
@@ -123,9 +125,9 @@ static int Tlc1543_Transfer( uint8_t* pData, int length )
 	return result;
 }
 
-/*******************************************************************************
+/***************************************************************************************************
 Read each of the ADC channels and store the data in the appropriate storage location
-*******************************************************************************/
+***************************************************************************************************/
 void Tlc1543_Service( void *shared_data_address )
 {
 	uint8_t data[2];
@@ -173,10 +175,7 @@ void Tlc1543_Service( void *shared_data_address )
 		channel_adc_result[i-1] = result;
 
 		pthread_mutex_lock(&mutex);
-		memcpy( (uint8_t*)p_shared_data->adc_results,
-				(uint8_t*)channel_adc_result,
-				sizeof(p_shared_data->adc_results));
-		p_shared_data->adc_data_available = true;
+		memcpy( (uint8_t*)p_shared_data->adc_results, (uint8_t*)channel_adc_result,	sizeof(p_shared_data->adc_results));
 		pthread_mutex_unlock(&mutex);
 	}
 }

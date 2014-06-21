@@ -57,21 +57,27 @@ void App_Service( void* shared_data_address )
 	static int print_timer = 0;
 	float temperature_error;
 	
+	// Obtain a lock on the shared data so that a copy can be made
 	pthread_mutex_lock(&mutex);
 	memcpy( (char*)adc_data, (char*)p_shared_data->adc_results, sizeof(adc_data) );
 	memcpy( (char*)temperature_data, (char*)p_shared_data->temp_deg_f, sizeof(temperature_data) );
 	pthread_mutex_unlock(&mutex);
 
+	// Call the thermistor service routine and have it convert the ADC measurements to temperatures
 	Thermistor_Service( adc_data, temperature_data );
 	cabinet_temperature = temperature_data[0];
 	temperature_error = (float)g_forced_cabinet_temp_deg_f - cabinet_temperature;
 		
+	// Periodically update the PID data
 	if (++timer >= RECALCULATE_DELAY)
 	{
 		timer = 0;
 		
 		Pid_Update(&g_pid, (double)temperature_error, (double)(MAIN_LOOP_TIME_US/1000));
 		
+		// The PID outputs a number from 0 to X depending on the gains.  Limit the servo
+		// position to minimum and maximum values.  Too low and the flame will go out,
+		// and too high just doesn't do anybody any good
 		servo_position = g_pid.control + MIN_POSITION_FOR_OPERATION;
 		if (servo_position < MIN_POSITION_FOR_OPERATION)
 			servo_position = MIN_POSITION_FOR_OPERATION;
@@ -110,83 +116,9 @@ void App_Service( void* shared_data_address )
 		move( y, x );
 	}
 
+
 	pthread_mutex_lock(&mutex);
-	memcpy( (char*)p_shared_data->adc_results, (char*)adc_data, sizeof(adc_data) );
 	memcpy( (char*)p_shared_data->temp_deg_f, (char*)temperature_data, sizeof(temperature_data) );
 	pthread_mutex_unlock(&mutex);
 }
 
-#if 0
-/**************************************************************************
-This is where the magic happens.  The ADC measurements are being taken
-in the background, the logging is happening in the background.  This 
-service routine is called from the main loop periodically and is
-responsible for setting the desired setpoint, executing the PID, and 
-setting the destination for the servo motor.
-**************************************************************************/
-void App_Service( void* shared_data_address )
-{
-	#define RECALCULATE_DELAY_US						5000000	/* 5 seconds */
-	uint16_t adc_data[NBR_ADC_CHANNELS];
-	float temperature_data[NBR_OF_THERMISTORS];
-	shared_data_type* p_shared_data = (shared_data_type*)shared_data_address;
-	int x, y;
-	int servo_position;
-	
-	static float cabinet_temperature = 0;
-	static int calculated_servo_position = 1000;
-	static int timer = 0;
-	
-	pthread_mutex_lock(&mutex);
-	memcpy( (char*)adc_data, (char*)p_shared_data->adc_results, sizeof(adc_data) );
-	memcpy( (char*)temperature_data, (char*)p_shared_data->temp_deg_f, sizeof(temperature_data) );
-	pthread_mutex_unlock(&mutex);
-
-	Thermistor_Service( adc_data, temperature_data );
-	cabinet_temperature = temperature_data[0];
-//	Pid_Service();
-//	Servo_Service( 0 );
-
-	if (timer <= 0)
-	{
-		if (cabinet_temperature > (g_forced_cabinet_temp_deg_f + 1))
-			calculated_servo_position-=2;
-		else if (cabinet_temperature < (g_forced_cabinet_temp_deg_f - 1))
-			calculated_servo_position++;
-
-		if (calculated_servo_position < MIN_POSITION_FOR_FIRE)
-			calculated_servo_position = MIN_POSITION_FOR_FIRE;
-		else if (calculated_servo_position > MAX_POSITION)
-			calculated_servo_position = MAX_POSITION;
-
-		if (g_forced_servo_position > 0)
-		{
-			servo_position = g_forced_servo_position;
-			calculated_servo_position  = servo_position;
-		}
-		else
-			servo_position = calculated_servo_position;
-
-		if (servo_position < MIN_POSITION)
-			servo_position = 0;
-		else if (servo_position > MAX_POSITION)
-			servo_position = 0;
-		
-		getyx(stdscr, y, x);
-		move( 2, 0 );
-		printw("Servo: %d    \n", servo_position);
-		move( y, x );
-		
-		timer = RECALCULATE_DELAY_US;
-
-		Servo_Service( servo_position );
-	}
-	else
-		timer -= MAIN_LOOP_TIME_US;
-
-	pthread_mutex_lock(&mutex);
-	memcpy( (char*)p_shared_data->adc_results, (char*)adc_data, sizeof(adc_data) );
-	memcpy( (char*)p_shared_data->temp_deg_f, (char*)temperature_data, sizeof(temperature_data) );
-	pthread_mutex_unlock(&mutex);
-}
-#endif

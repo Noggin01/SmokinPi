@@ -19,9 +19,9 @@ static FILE *write_ptr;               // File pointer for writing data
 /* *** Function Declarations *** */
 static void Logging_Signal_Handler( int signal );
 
-/********************************************************
+/***************************************************************************************************
 Open a file for logging data
-********************************************************/
+***************************************************************************************************/
 void Logging_Init( void )
 {
    char filename[50];
@@ -29,20 +29,22 @@ void Logging_Init( void )
    struct tm tm;
 
    tm = *localtime(&t);
-   sprintf(filename, "Log-%d-%d-%d.csv", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
+   sprintf(filename, "logs/Log-%d-%d-%d.csv", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
    write_ptr = fopen(filename,"a");   // Open the log file for appending
+
+   if (write_ptr == NULL)
+      printf("Error, can't open log file: %s\n", filename);
+   else
+      printf("Log file: %s\n", filename);
 }
 
-/*****************************************************************************
-The sleep() function stalls the thread execution for the specified number of
-seconds; however, it can be interrupted.  In the case that the function is
-interrupted, it returns the remaining number of seconds of sleep that did not
-occur.  Continue sleeping until sleep() returns 0, which indicates that the
-full sleep has occurred.
+/***************************************************************************************************
+The sleep() function stalls the thread execution for the specified number of seconds; however, it 
+can be interrupted.  In the case that the function is interrupted, it returns the remaining number 
+of seconds of sleep that did not occur.  Continue sleeping until sleep() returns 0, which indicates 
+that the full sleep has occurred.
 
-!!! If sleep is interrupted after less than 500mS, what does it return?
-!!! If sleep is interrupted after more than 500mS, what does it return?
-*****************************************************************************/
+***************************************************************************************************/
 int Logging_Full_Sleep( int seconds )
 {
    while (seconds > 0)
@@ -51,15 +53,13 @@ int Logging_Full_Sleep( int seconds )
    return seconds;
 }
 
-/******************************************************************************
-This service routine logs data to a comma separated file suitable for reading
-by spreadsheet programs.  A file is opened for appending, data is written to
-the file, then the file is closed.
+/***************************************************************************************************
+This service routine logs data to a comma separated file suitable for reading by spreadsheet 
+programs.  A file is opened for appending, data is written to the file, then the file is closed.
 
-Log Contents include temperature data from half of the thermistors, ADC
-measurements from the remaining half of the analog channels, and the propane
-valve's servo position.
-******************************************************************************/
+Log Contents include temperature data from half of the thermistors, ADC measurements from the 
+remaining half of the analog channels, and the propane valve's servo position.
+***************************************************************************************************/
 void Logging_Service( void *shared_data_address )
 {
    float local_temperature_deg_f[NBR_OF_THERMISTORS];   // Local copy of the temperature data
@@ -76,7 +76,7 @@ void Logging_Service( void *shared_data_address )
 
    sleep(5);      // Sleep 5 seconds before logging any data
 
-   while (1)
+   while (write_ptr != NULL)
    {
       // Obtain a lock to the shared data, create a local
       // copy of the data, then release the lock
@@ -104,10 +104,10 @@ void Logging_Service( void *shared_data_address )
    }
 }
 
-/******************************************************************************
-When Ctrl+C is pressed to end the process, this function will catch the signal
-and close the file stream before exiting the thread
-******************************************************************************/
+/***************************************************************************************************
+When Ctrl+C is pressed to end the process, this function will catch the signal and close the file 
+stream before exiting the thread
+***************************************************************************************************/
 static void Logging_Signal_Handler( int signalnum )
 {
    switch (signalnum)

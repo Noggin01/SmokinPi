@@ -11,39 +11,31 @@
 /* **** Function Declarations **** */
 static int Servo_Set_Position( int pulse_width );
 
-/*******************************************************************************
+/***************************************************************************************************
 Set the servo pulse with to 0 in order to turn off the PWM
 
-*******************************************************************************/
-int Servo_Init( void )
-{
-	return Servo_Set_Position(0);
-}
+***************************************************************************************************/
+int Servo_Init( void ) { return Servo_Set_Position(0); }
+int Servo_Shutdown( void ) { return Servo_Set_Position(0); }
 
-int Servo_Shutdown( void )
-{
-	return Servo_Set_Position(0);
-}
+/***************************************************************************************************
+This function accepts a position command from the main loop and moves to that position.  A static 
+variable timer is used to limit the time which the servo maybe energized in order to limit the 
+seeking the servo performs.
 
-/*******************************************************************************
-This function accepts a position command from the main loop and moves to that
-position.  A static variable timer is used to limit the time which the servo may
-be energized in order to limit the seeking the servo performs.
+If the current position is unknown, the static timer is set to 5 seconds in order to give the servo 
+plenty of time to move to its new position. 
 
-If the current position is unknown, the static timer is set to 5 seconds in
-order to give the servo plenty of time to move to its new position. 
+If the current position is known, the static timer is incremented by 8 mS for every count the servo 
+needs to move from its current position.  If the position oscillates by a small amount, the timer 
+may incur windup, so the timer is limited to a maximum of 5 seconds.
 
-If the current position is known, the static timer is incremented by 8 mS for
-every count the servo needs to move from its current position.  If the position
-oscillates by a small amount, the timer may incur windup, so the timer is
-limited to a maximum of 5 seconds.
-
-Every minute, the servo's known position flag is set to false.  This allows the
-servo's position to be reset in the event that it is not where it is expected.
-*******************************************************************************/
+Every minute, the servo's known position flag is set to false.  This allows the servo's position to 
+be reset in the event that it is not where it is expected.
+***************************************************************************************************/
 void Servo_Service( int position_cmd )
 {
-	#define FORCE_ENABLE_DELAY		(60 * 1000000)		/* 1 Minutes */
+	#define FORCE_ENABLE_DELAY		(60 * 1000000)		/* 1 Minute */
 	static unsigned char position_known = false;
 	static int last_position_cmd;
 	static int timer_us = 0;

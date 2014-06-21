@@ -25,19 +25,19 @@ const static double conversion_coefficients[NBR_THERMISTOR_TYPES][NBR_OF_COEFFIC
 /* *** Function Declarations *** */
 float Thermistor_Convert_Adc_To_Deg_F( uint16_t adc, uint8_t i );
 
-/**************************************************************************
-Initialize thermistor data to nan (not a number) so that the service 
-routine will recognize that the data isn't valid
-**************************************************************************/
+/***************************************************************************************************
+Initialize thermistor data to nan (not a number) so that the service routine will recognize that 
+the data isn't valid
+***************************************************************************************************/
 void Thermistor_Init( void )
 {
 	// Aint got shit to do right now
 	printf("Thermistor data initialized\n");
 }
 
-/**************************************************************************
+/***************************************************************************************************
 When new ADC data is available, convert it to temperature in Deg F
-**************************************************************************/
+***************************************************************************************************/
 void Thermistor_Service( uint16_t *p_adc_data, float *p_temperature_data )
 {
 	#define PRINT_DELAY					(1000000/MAIN_LOOP_TIME_US)	/* 1 seconds */
@@ -72,10 +72,10 @@ void Thermistor_Service( uint16_t *p_adc_data, float *p_temperature_data )
 	}
 }
 
-/****************************************************************************************
-Determine which type of thermistor each this conversion is for.  Then calculate the 
-temperature using a polynomial forumla obtained with ADC vs Temperature plots in Excel.
-****************************************************************************************/
+/***************************************************************************************************
+Determine which type of thermistor each this conversion is for.  Then calculate the temperature 
+using a polynomial forumla obtained with ADC vs Temperature plots in Excel.
+***************************************************************************************************/
 float Thermistor_Convert_Adc_To_Deg_F( uint16_t adc, uint8_t thermistor_index )
 {
 	double temp_deg_f;
