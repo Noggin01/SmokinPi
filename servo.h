@@ -6,5 +6,5 @@
 
 // Returns a value >= 1 if successful
 int Servo_Init( void );
-void Servo_Shutdown( void );
+int Servo_Shutdown( void );
 void Servo_Service( int position );

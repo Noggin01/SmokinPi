@@ -8,59 +8,21 @@
 #include "main.h"
 #include "app.h"
 
+/* **** Function Declarations **** */
+static int Servo_Set_Position( int pulse_width );
 
 /*******************************************************************************
-This function initializes the servo by first terminating the pigpio C library 
-functions if they are enabled, and then initializing them again.
+Set the servo pulse with to 0 in order to turn off the PWM
 
-Note:  gpioInitialise() requires the program to be run as sudo
 *******************************************************************************/
 int Servo_Init( void )
 {
-	int result = 0;
-	char cmd[50];
-	int response;
-
-	FILE *servo = fopen("/dev/pigpio", "w");
-
-	if (servo == NULL)
-	{
-		printf("Error opening file: /dev/pigpio - %s.%u\n", __FILE__, __LINE__);
-		result = -1;
-	}
-	else
-	{
-		fprintf(servo, "s 18 40\n");
-		fflush(servo);
-		fclose(servo);
-
-		// read result from pigout
-		servo = fopen("/dev/pigout", "r");
-		if (servo == NULL)
-		{
-			printf("Error opening file: /dev/pigout - %s.%u\n", __FILE__, __LINE__);
-			result = -1;
-		}
-		else
-		{
-			fscanf(servo, "%d", &response);
-			if (response == 0)	// On a successful write to pigpio, pigout should return 0
-				result = 1;
-			fclose(servo);
-		}
-	}
-
-	if (result == 1)
-		printf("Servo control is happy!\n");
-	else
-		printf("Servo control is not happy :(\n");
-
-	return result;
+	return Servo_Set_Position(0);
 }
 
-void Servo_Shutdown( void )
+int Servo_Shutdown( void )
 {
-	gpioTerminate();
+	return Servo_Set_Position(0);
 }
 
 /*******************************************************************************
@@ -119,14 +81,65 @@ void Servo_Service( int position_cmd )
 	
 	if (timer_us <= 0)
 	{
-		gpioServo( 18, 0 );	
+		Servo_Set_Position(0);	
 		timer_us = 0;
 	}
 	else
 	{
-		gpioServo( 18, position_cmd );
+		Servo_Set_Position(position_cmd);
 		timer_us -= MAIN_LOOP_TIME_US;
 	}
 
 	last_position_cmd = position_cmd;
 }
+
+
+/*******************************************************************************
+This function obtains the mutex for the PiGPIO pipes, writes the specified
+command to the pipe, and reads the result.  If the command is valid, the 
+dev/pigout pipe will return 0.
+
+Returns	-1 if the file pipes can't be opened
+		 0 if the response is non-zero
+		 1 if the response is zero
+*******************************************************************************/
+static int Servo_Set_Position( int width )
+{
+	FILE *pigpio_write;
+	FILE *pigpio_read;
+
+	int pigpio_response;
+	int result = 0;
+
+	pthread_mutex_lock(&pigpio_mutex);		
+	
+	pigpio_write = fopen("/dev/pigpio", "w");
+	pigpio_read = fopen("/dev/pigout", "r");
+
+	if ((pigpio_write == NULL) || (pigpio_read == NULL))
+	{
+		printf("Error opening file handles - %s.%u\n", __FILE__, __LINE__);
+		result = -1;
+	}
+	else
+	{
+		fprintf(pigpio_write, "s 18 %d\n", width);
+		fflush(pigpio_write);
+
+		// read result from pigout
+		fscanf(pigpio_read, "%d", &pigpio_response);
+		if (pigpio_response == 0)	// On a successful write to pigpio, pigout should return 0
+			result = 1;
+	}
+
+	if (pigpio_write)
+		fclose(pigpio_write);
+	if (pigpio_read)
+		fclose(pigpio_read);
+
+	pthread_mutex_unlock(&pigpio_mutex);
+
+	return result;
+}
+
+/* **** End of File **** */

@@ -28,6 +28,7 @@ Four threads
 #include "main.h"
 #include "logging.h"
 #include "cmd_line.h"
+#include "rev_history.h"
 
 typedef enum 
 {
@@ -45,6 +46,9 @@ shared_data_type shared_data;
 
 // Mutex for obtaining control over the shared data
 pthread_mutex_t mutex;
+
+// Mutex for obtaining control over the PiGPIO files
+pthread_mutex_t pigpio_mutex;
 
 // Signal to end main thread execution
 static int g_exit_signal_received = false;
@@ -64,15 +68,12 @@ void Main_Init_Hardware( void )
 		_exit(3);
 	}
 
-	printf("Fixme %s.%u\n", __FILE__, __LINE__);
-	_exit(3);
-
 	Tlc1543_Init();
 	Thermistor_Init();
 	App_Init();
-
 	Logging_Init();
 	Cmd_Line_Init( &shared_data );
+	sleep(1);
 }
 
 int main( void )
@@ -85,6 +86,7 @@ int main( void )
 	
 	printf("Smokin'Pi - Propane Smoker Controller\n");
 	printf("Compiled: %s\n", __DATE__);
+	printf("Version: %u.%u.%u\n", FIRMWARE_MAJOR, FIRMWARE_MINOR, FIRMWARE_REVISION);
 	
 	Main_Init_Hardware();
 	
