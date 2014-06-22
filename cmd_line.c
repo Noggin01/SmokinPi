@@ -15,9 +15,26 @@ typedef struct
 } cmd_type;
 
 /* *** Defined Values *** */
+typedef enum
+{
+	CMD_SHOW_MENU=0,
+	CMD_EXIT,
+	CMD_TOGGLE_DEBUG_FLAG,
+	CMD_SHOW_DEBUG_FLAGS,
+	CMD_SET_SETPOINT,
+	CMD_TOGGLE_AUTO_SERVO_CONTROL,
+	CMD_SET_SERVO_PULSE_WIDTH,
+	CMD_SET_KP,
+	CMD_SET_KI,
+	CMD_SET_KD,
+	CMD_SET_KL,
+	
+	NBR_OF_CMDS,
+	NO_CMD_AVAILABLE,
+} cmd_ids;
 
 /* *** Global Variables *** */
-const cmd_type cmd_list[NBR_OF_CMDS] = {
+static const cmd_type cmd_list[NBR_OF_CMDS] = {
 	{ "HELP",			"Shows this menu\n"									},
 	{ "EXIT",			"Closes the program\n"								},
 	{ "DEBUG=",			"Toggle debug flag\n"								},

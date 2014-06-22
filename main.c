@@ -29,14 +29,17 @@ Four threads
 #include "logging.h"
 #include "cmd_line.h"
 #include "rev_history.h"
+#include "file_fifo.h"
 
 typedef enum 
 {
-    THREAD_ID_TLC1543 = 0,		// Thread for reading the ADC data
-    THREAD_ID_LOGGING,			// Thread for logging data to the uSD card
-    THREAD_ID_CMD_LINE,			// Thread for reading data from the cmd line
-   
-    NBR_THREADS,
+	THREAD_ID_TLC1543 = 0,		// Thread for reading the ADC data
+	THREAD_ID_LOGGING,			// Thread for logging data to the uSD card
+	THREAD_ID_CMD_LINE,			// Thread for reading data from the cmd line
+	THREAD_ID_FILE_FIFO_IN,		// Thread for reading from external programs
+	THREAD_ID_FILE_FIFO_OUT,	// Thread for writing to external programs
+
+	NBR_THREADS,
 } thread_ids;
 
 /* **** Global Data **** */
@@ -59,12 +62,15 @@ void Main_Init_Hardware( void )
 {
 	int result;
 	
-	result = Servo_Init();
-	if (result < 0)
+	if (Servo_Init() < 0)
 	{
-		printf("Unable to obtain servo control.\n");
-		printf("Run with sudo command?\n");
-		printf("Cancel pigpio?  (sudo killall pigpiod)\n");
+		printf("Unable to obtain servo control.\nIs pigpiod running?\n");
+		_exit(3);
+	}
+
+	if (File_Fifo_Init() <= 0)
+	{
+		printf("Error making pipes\n");
 		_exit(3);
 	}
 
@@ -104,6 +110,10 @@ int main( void )
 	
 	// Spin off the cmd line thread so that the program can accept data via the command line
 	pthread_create(&thread[THREAD_ID_CMD_LINE], NULL, (void*)&Cmd_Line_Service, (void*)&shared_data);
+
+	// Spin off the file fifo threads so that external programs can communicate via pipes
+	pthread_create(&thread[THREAD_ID_FILE_FIFO_IN], NULL, (void*)&File_Fifo_Service_Input, (void*)&shared_data);
+	pthread_create(&thread[THREAD_ID_FILE_FIFO_OUT], NULL, (void*)&File_Fifo_Service_Output, (void*)&shared_data);
 	
 	while (!g_exit_signal_received)
 	{
@@ -126,11 +136,11 @@ and alert the main thread that it is time to quit running
 ******************************************************************************/
 static void Main_Signal_Handler( int signalnum )
 {
-   switch (signalnum)
-   {
-      case SIGINT:
-      	Servo_Shutdown();
-	      g_exit_signal_received = true;
-         break;
-   }
+	switch (signalnum)
+	{
+		case SIGINT:
+			Servo_Shutdown();
+			g_exit_signal_received = true;
+			break;
+	}
 }
