@@ -13,18 +13,24 @@
 #include "pid.h"
 
 /* *** Global Variables *** */
-static float g_forced_cabinet_temp_deg_f;
+static float g_cabinet_setpoint_temp_deg_f;
 static int g_forced_servo_position;
 
 static pid_type g_pid;
 
 /* *** Accessors *** */
-void App_Force_Cabinet_Temperature( float temp_deg_f ){ g_forced_cabinet_temp_deg_f = temp_deg_f; }
+void App_Set_Cabinet_Setpoint( float temp_deg_f ){ g_cabinet_setpoint_temp_deg_f = temp_deg_f; }
 void App_Force_Servo_Position( int position ){ g_forced_servo_position = position; }
-void App_Set_Kp( double gain ){ g_pid.proportional_gain = gain; }
-void App_Set_Ki( double gain ){ g_pid.integral_gain = gain; }
-void App_Set_Kd( double gain ){ g_pid.derivative_gain = gain; }
-void App_Set_Kl( double limit ){ g_pid.windup_guard = limit; }
+void App_Set_Kp( float gain ){ if (gain > 0) g_pid.proportional_gain = gain; }
+void App_Set_Ki( float gain ){ if (gain > 0) g_pid.integral_gain = gain; }
+void App_Set_Kd( float gain ){ if (gain > 0) g_pid.derivative_gain = gain; }
+void App_Set_Kl( float limit ){ if (limit > 0) g_pid.windup_guard = limit; }
+
+float App_Get_Cabinet_Setpoint( void ){ return g_cabinet_setpoint_temp_deg_f; }
+float App_Get_Kp( void ){ return g_pid.proportional_gain; }
+float App_Get_Kd( void ){ return g_pid.derivative_gain; }
+float App_Get_Ki( void ){ return g_pid.integral_gain; }
+float App_Get_Kl( void ){ return g_pid.windup_guard; }
 
 void App_Init( void )
 {
@@ -66,7 +72,7 @@ void App_Service( void* shared_data_address )
 	// Call the thermistor service routine and have it convert the ADC measurements to temperatures
 	Thermistor_Service( adc_data, temperature_data );
 	cabinet_temperature = temperature_data[0];
-	temperature_error = (float)g_forced_cabinet_temp_deg_f - cabinet_temperature;
+	temperature_error = (float)g_cabinet_setpoint_temp_deg_f - cabinet_temperature;
 		
 	// Periodically update the PID data
 	if (++timer >= RECALCULATE_DELAY)

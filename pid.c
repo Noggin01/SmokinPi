@@ -7,12 +7,12 @@ void Pid_Reset(pid_type* pid)
     pid->int_error = 0;
 }
  
-void Pid_Update(pid_type* pid, double current_error, double dt) 
+void Pid_Update(pid_type* pid, float current_error, float dt) 
 {
-    double diff;
-    double p_term;
-    double i_term;
-    double d_term;
+    float diff;
+    float p_term;
+    float i_term;
+    float d_term;
 
     // integration with windup guarding
     pid->int_error += (current_error * dt);

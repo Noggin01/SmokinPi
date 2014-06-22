@@ -1,11 +1,18 @@
 void App_Init( void );
 void App_Service( void* shared_data_address );
 
-void App_Force_Cabinet_Temperature( float temp_deg_f );
+void App_Set_Cabinet_Setpoint( float temp_deg_f );
+float App_Get_Cabinet_Setpoint( void );
+
 void App_Force_Servo_Position( int position );
 
-void App_Set_Kp( double gain );
-void App_Set_Ki( double gain );
-void App_Set_Kd( double gain );
-void App_Set_Kl( double limit );
+void App_Set_Kp( float gain );
+void App_Set_Ki( float gain );
+void App_Set_Kd( float gain );
+void App_Set_Kl( float limit );
+
+float App_Get_Kp( void );
+float App_Get_Ki( void );
+float App_Get_Kl( void );
+float App_Get_Kd( void );
 

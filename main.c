@@ -60,8 +60,6 @@ static void Main_Signal_Handler( int signal );
 
 void Main_Init_Hardware( void )
 {
-	int result;
-	
 	if (Servo_Init() < 0)
 	{
 		printf("Unable to obtain servo control.\nIs pigpiod running?\n");

@@ -164,7 +164,7 @@ static void Cmd_Line_Process( void )
 				
 			case CMD_SET_SETPOINT:
 				printw("New Setpoint: %4.2f\n", atof(p_param) );
-				App_Force_Cabinet_Temperature( atof(p_param) );
+				App_Set_Cabinet_Setpoint( atof(p_param) );
 				break;
 			
 			case CMD_TOGGLE_AUTO_SERVO_CONTROL:
