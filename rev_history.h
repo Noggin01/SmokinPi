@@ -5,12 +5,16 @@ File:  rev_history.h
 
 #define FIRMWARE_MAJOR		0
 #define FIRMWARE_MINOR		1
-#define FIRMWARE_REVISION	2
+#define FIRMWARE_REVISION	3
 
 /* Description of changes. *************************************************************************
 
-*** 22JUN14 *** Ver 0.1.2 *** HGM
+*** 14JUL14 *** Ver 0.1.3 *** HGM
+1. Added command to file_fifo to allow retrieval of all thermistor temps
+2. Added Makefile to speed building the project
 
+*** 22JUN14 *** Ver 0.1.2 *** HGM
+1. Lots of stuff to support control via pipes (file_fifo.? mainly)
 
 *** 17JUN14 *** Ver 0.1.1 *** HGM
 1. Removed WiringPi dependancy which was used for SPI.  Updated the PiGPIO library to the latest 

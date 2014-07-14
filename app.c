@@ -13,10 +13,14 @@
 #include "pid.h"
 
 /* *** Global Variables *** */
+#define MAX_NAME_LENGTH			50
+
 static float g_cabinet_setpoint_temp_deg_f;
 static int g_forced_servo_position;
 
 static pid_type g_pid;
+
+static char g_channel_names[NBR_OF_THERMISTORS][MAX_NAME_LENGTH];
 
 /* *** Accessors *** */
 void App_Set_Cabinet_Setpoint( float temp_deg_f ){ g_cabinet_setpoint_temp_deg_f = temp_deg_f; }
@@ -34,11 +38,17 @@ float App_Get_Kl( void ){ return g_pid.windup_guard; }
 
 void App_Init( void )
 {
+	int i;
+
 	Pid_Reset( &g_pid );
 	g_pid.windup_guard = 500000.0;
 	g_pid.proportional_gain = 5.0;
 	g_pid.integral_gain = 0.0002;
 	g_pid.derivative_gain = 0.0;
+
+	strcpy(g_channel_names[0], "Cabinet");
+	for (i = 1; i < NBR_OF_THERMISTORS; i++)
+		strcpy( g_channel_names[i], "Not Set" );
 }
 
 /**************************************************************************
@@ -128,3 +138,24 @@ void App_Service( void* shared_data_address )
 	pthread_mutex_unlock(&mutex);
 }
 
+/**************************************************************************
+Sets the channel names so that they can be used for displaying data at a
+later time
+**************************************************************************/
+void App_Set_Channel_Name( int channel, char* pName )
+{
+	if ((channel < NBR_OF_THERMISTORS) && (strlen(pName) < MAX_NAME_LENGTH))
+		strcpy( g_channel_names[channel], pName );
+}
+
+char* App_Get_Channel_Name( int channel )
+{
+	static char name[MAX_NAME_LENGTH];
+
+	if (channel < NBR_OF_THERMISTORS)
+		strcpy( name, g_channel_names[channel] );
+	else
+		name[0] = 0;
+
+	return name;
+}

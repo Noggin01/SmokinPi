@@ -40,8 +40,9 @@ typedef enum
 	CMD_SET_PROBE_TARGET_TEMP,
 	CMD_GET_PROBE_TARGET_TEMP,
 	CMD_GET_PROBE_TEMP,
+	CMD_GET_ALL_TEMPS,
 	CMD_SET_CHANNEL_NAME,
-	CMD_GET_CHANNEL_NAME,
+	CMD_GET_CHANNEL_NAMES,
 	CMD_SET_P_GAIN,
 	CMD_SET_I_GAIN,
 	CMD_SET_I_LIMIT,
@@ -49,7 +50,8 @@ typedef enum
 	CMD_GET_I_GAIN,
 	CMD_GET_I_LIMIT,
 
-	NBR_OF_CMDS
+	NBR_OF_CMDS,
+	CMD_UNKNOWN=-1
 } cmd_id_type;
 
 static const cmd_type cmd_list[NBR_OF_CMDS] = {
@@ -60,8 +62,9 @@ static const cmd_type cmd_list[NBR_OF_CMDS] = {
 	{ "SET_PROBE_TARGET",		"Set the target channel temperature\n"		},
 	{ "GET_PROBE_TARGET",		"Gets the target channel temperature\n"		},
 	{ "GET_PROBE_TEMP",			"Gets the current probe temperature\n"		},
+	{ "GET_ALL_TEMPS",		"Gets the temperature of all sensors\n"		},
 	{ "SET_CHANNEL_NAME",		"Set the name of the target channel\n"		},
-	{ "GET_CHANNEL_NAME",		"Gets the name of the target channel\n"		},
+	{ "GET_CHANNEL_NAMES",		"Gets the names of all probe channels\n"		},
 	{ "SET_KP",					"Set proportaional gain\n"					},
 	{ "SET_KI",					"Set integral gain\n"						},
 	{ "SET_KL",					"Set integral limit\n"						},
@@ -102,7 +105,10 @@ static void File_Fifo_Get_Cook_Temp( void );
 static void File_Fifo_Get_P_Gain( void );
 static void File_Fifo_Get_I_Gain( void );
 static void File_Fifo_Get_I_Limit( void );
+static void File_Fifo_Get_All_Probe_Temps( void );
 static void File_Fifo_Get_Probe_Temp( char* tokens );
+static void File_Fifo_Set_Channel_Name( char* tokens );
+static void File_Fifo_Get_Channel_Names( void );
 
 /***************************************************************************************************
 Sets up the named pipes for receiving commands, sending responses, and reporting errors.
@@ -120,7 +126,7 @@ int File_Fifo_Init( void )
 	remove(SMPI_ERRFIFO);
 
 	// Create the fifos
-	if (mkfifo(SMPI_INPFIFO, 0666) || mkfifo(SMPI_OUTFIFO, 0666) || mkfifo(SMPI_ERRFIFO, 0666))
+	if (mkfifo(SMPI_INPFIFO, 0777) || mkfifo(SMPI_OUTFIFO, 0777) || mkfifo(SMPI_ERRFIFO, 0777))
 		result = -1;
 	else
 		result = 1;
@@ -136,7 +142,8 @@ void File_Fifo_Service_Input( void *shared_data_address )
 	gp_shared_data = (shared_data_type*)shared_data_address;
 
 	signal(SIGINT, File_Fifo_Signal_Handler);
-
+	signal(SIGPIPE, SIG_IGN);
+	
 	while (1)
 	{
 		g_fifo_input = fopen(SMPI_INPFIFO, "r");
@@ -161,6 +168,7 @@ void File_Fifo_Service_Output( void *shared_data_address )
 	gp_shared_data = (shared_data_type*)shared_data_address;
 
 	signal(SIGINT, File_Fifo_Signal_Handler);
+	signal(SIGPIPE, SIG_IGN);
 
 	while (1)
 	{
@@ -205,30 +213,48 @@ static void File_Fifo_Process_Cmd( char* cmd_buff )
 	int cmd_nbr;
 	char buffer[50];
 	
-	cmd = strtok(cmd_buff, " ");	// cmd will now point to the CMD in the input buffer
-	tokens = strtok(NULL, " ");
-	for (cmd_nbr = 0; cmd_nbr < NBR_OF_CMDS; cmd_nbr++)
+	cmd = strtok(cmd_buff, " \n");	// cmd will now point to the CMD in the input buffer
+	
+	if (cmd)
 	{
-		if (strcasecmp(cmd, cmd_list[cmd_nbr].cmd) == 0)
-			break;
+		tokens = strtok(NULL, " \n");
+	
+		for (cmd_nbr = 0; cmd_nbr < NBR_OF_CMDS; cmd_nbr++)
+		{
+			if (strcasecmp(cmd, cmd_list[cmd_nbr].cmd) == 0)
+				break;
+		}
 	}
+	else
+		cmd_nbr = -1;
 
 	switch (cmd_nbr)
 	{
+		default:
+		case CMD_UNKNOWN:
+			File_Fifo_Respond("-1\n");
+			break;
+
 		case CMD_GET_VERSION:
-			sprintf(buffer, "0\n%d.%d.%d", FIRMWARE_MAJOR, FIRMWARE_MINOR, FIRMWARE_REVISION);
+			sprintf(buffer, "1\n%d.%d.%d\n", FIRMWARE_MAJOR, FIRMWARE_MINOR, FIRMWARE_REVISION);
 			File_Fifo_Respond(buffer);
 			break;
 	
 		case CMD_EXIT:
 		case CMD_SET_PROBE_TARGET_TEMP:
 		case CMD_GET_PROBE_TARGET_TEMP:
-		case CMD_SET_CHANNEL_NAME:
-		case CMD_GET_CHANNEL_NAME:	
 			File_Fifo_Respond("-1\n");
 			File_Fifo_Report_Error("Cmd not implemented\n");
 			break;
-		
+
+		case CMD_SET_CHANNEL_NAME:
+			File_Fifo_Set_Channel_Name( tokens );
+			break;
+
+		case CMD_GET_CHANNEL_NAMES:	
+			File_Fifo_Get_Channel_Names();
+			break;
+
 		case CMD_SET_CAB_TEMP:
 			File_Fifo_Set_Cook_Temp( tokens );
 			break;
@@ -239,6 +265,10 @@ static void File_Fifo_Process_Cmd( char* cmd_buff )
 
 		case CMD_GET_PROBE_TEMP:
 			File_Fifo_Get_Probe_Temp( tokens );
+			break;
+
+		case CMD_GET_ALL_TEMPS:
+			File_Fifo_Get_All_Probe_Temps();
 			break;
 		
 		case CMD_SET_P_GAIN:
@@ -379,7 +409,7 @@ static void File_Fifo_Get_Cook_Temp( void )
 	float temperature;
 
 	temperature = App_Get_Cabinet_Setpoint();
-	sprintf(buffer, "0\n%4.2f", temperature);
+	sprintf(buffer, "1\n%4.2f\n", temperature);
 	File_Fifo_Respond(buffer);
 }
 
@@ -389,7 +419,7 @@ static void File_Fifo_Get_P_Gain( void )
 	float gain;
 
 	gain = App_Get_Kp();
-	sprintf(buffer, "0\n%4.2f", gain);
+	sprintf(buffer, "1\n%4.2f\n", gain);
 	File_Fifo_Respond(buffer);
 }
 
@@ -399,7 +429,7 @@ static void File_Fifo_Get_I_Gain( void )
 	float gain;
 
 	gain = App_Get_Ki();
-	sprintf(buffer, "0\n%4.2f", gain);
+	sprintf(buffer, "1\n%4.2f\n", gain);
 	File_Fifo_Respond(buffer);
 }
 
@@ -409,7 +439,7 @@ static void File_Fifo_Get_I_Limit( void )
 	float limit;
 
 	limit = App_Get_Kl();
-	sprintf(buffer, "0\n%4.2f", limit);
+	sprintf(buffer, "1\n%4.2f\n", limit);
 	File_Fifo_Respond(buffer);
 }
 
@@ -428,7 +458,7 @@ static void File_Fifo_Get_Probe_Temp( char* tokens )
 			pthread_mutex_lock(&mutex);
 			temperature = gp_shared_data->temp_deg_f[channel];
 			pthread_mutex_unlock(&mutex);
-			response = 0;
+			response = 1;
 		}
 		else
 		{
@@ -442,13 +472,73 @@ static void File_Fifo_Get_Probe_Temp( char* tokens )
 		response = -1;
 	}
 
-	if (response == 0)
-		sprintf(buffer, "%d\n%4.2f", response, temperature);
+	if (response == 1)
+		sprintf(buffer, "%d\n%4.2f\n", response, temperature);
 	else
 		sprintf(buffer, "%d\n", response);
 	File_Fifo_Respond(buffer);
 }
 
+static void File_Fifo_Set_Channel_Name( char* tokens )
+{
+	int response;
+	int channel;
+	char buffer[128];
+	char name[128];
+
+	if (tokens != NULL)
+	{
+		sscanf(tokens, "%d", &channel);
+		tokens = strtok(NULL, " \n");
+		if (strlen(tokens) < (sizeof(name)-1))
+			strcpy(name, tokens);
+		App_Set_Channel_Name( channel, name );
+		response = 0;
+	}
+	else
+	{
+		response = -1;
+	}
+
+	sprintf(buffer, "%d\n", response);
+	File_Fifo_Respond(buffer);
+}
+
+static void File_Fifo_Get_Channel_Names( void )
+{
+	int i;
+	char buffer[1024] = { 0 };
+	char* name;
+	
+	strcpy( buffer, "1\n" );
+	for (i = 0; i < NBR_OF_THERMISTORS; i++)
+	{
+		name = App_Get_Channel_Name( i );
+		sprintf(buffer, "%s%s,", buffer, name);
+	}
+
+	// convert the ',' at the end of the string to a '\n'
+	buffer[strlen(buffer)-1] = '\n';
+	File_Fifo_Respond(buffer);
+}
+
+
+static void File_Fifo_Get_All_Probe_Temps( void )
+{
+	char buffer[150];
+	int channel;
+
+	strcpy(buffer, "1\n");
+	pthread_mutex_lock(&mutex);
+	for (channel = 0; channel < NBR_OF_THERMISTORS; channel++)
+		sprintf(buffer, "%s%4.2f,", buffer, gp_shared_data->temp_deg_f[channel]);
+	pthread_mutex_unlock(&mutex);
+
+	// Change the ',' at the end of the string to a '\n'
+	buffer[strlen(buffer)-1] = '\n';
+
+	File_Fifo_Respond(buffer);
+}
 
 
 /***************************************************************************************************

@@ -63,14 +63,14 @@ static int Tlc1543_Transfer( uint8_t* pData, int length )
 	uint8_t* write_data = pData;
 	uint8_t* read_data = pData;
 	char carriage_return;
-	
+
 	int pigpio_handle;
 	int pigpio_response = 0;
 	int result = 1;
 	int i;
 
-	pthread_mutex_lock(&pigpio_mutex);		
-	
+	pthread_mutex_lock(&pigpio_mutex);
+
 	pigpio_write = fopen("/dev/pigpio", "w");
 	pigpio_read = fopen("/dev/pigout", "r");
 

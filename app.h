@@ -16,3 +16,6 @@ float App_Get_Ki( void );
 float App_Get_Kl( void );
 float App_Get_Kd( void );
 
+void App_Set_Channel_Name( int channel, char* pName );
+char* App_Get_Channel_Name( int channel );
+
