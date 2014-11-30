@@ -5,9 +5,12 @@ File:  rev_history.h
 
 #define FIRMWARE_MAJOR		0
 #define FIRMWARE_MINOR		1
-#define FIRMWARE_REVISION	3
+#define FIRMWARE_REVISION	4
 
 /* Description of changes. *************************************************************************
+
+*** 26NOV14 *** Ver 0.1.4 *** HGM
+1. Began adding basic Ethernet functionality
 
 *** 14JUL14 *** Ver 0.1.3 *** HGM
 1. Added command to file_fifo to allow retrieval of all thermistor temps

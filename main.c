@@ -8,11 +8,12 @@ Required Libraries
 	pigpio	- for servo control
 	wiringPi	- for SPI functionality
 
-Four threads
+Five threads
     Main thread - Main loop, spins off the other two threads
     TLC1543 - Thread for reading the ADC data
     Logging - Thread for logging data to the uSD card
     Command Line - Thread for reading commands from the command line interface
+    Ethernet Comms - Thread for listening for system commands over ethernt
 *******************************************************************************/
 
 #include <stdio.h>
@@ -30,12 +31,14 @@ Four threads
 #include "cmd_line.h"
 #include "rev_history.h"
 #include "file_fifo.h"
+#include "eth_comms.h"			// For Ethernet communications
 
 typedef enum 
 {
 	THREAD_ID_TLC1543 = 0,		// Thread for reading the ADC data
 	THREAD_ID_LOGGING,			// Thread for logging data to the uSD card
 	THREAD_ID_CMD_LINE,			// Thread for reading data from the cmd line
+	THREAD_ID_ETHERNET,			// Thread for communication via Ethernet
 	THREAD_ID_FILE_FIFO_IN,		// Thread for reading from external programs
 	THREAD_ID_FILE_FIFO_OUT,	// Thread for writing to external programs
 
@@ -69,6 +72,12 @@ void Main_Init_Hardware( void )
 	if (File_Fifo_Init() <= 0)
 	{
 		printf("Error making pipes\n");
+		_exit(3);
+	}
+
+	if (Eth_Comms_Init() < 0)
+	{
+		printf("Error iniializing Ethernet comms\n");
 		_exit(3);
 	}
 
@@ -109,6 +118,9 @@ int main( void )
 	// Spin off the cmd line thread so that the program can accept data via the command line
 	pthread_create(&thread[THREAD_ID_CMD_LINE], NULL, (void*)&Cmd_Line_Service, (void*)&shared_data);
 
+	// Spin off the ethernet thread
+	pthread_create(&thread[THREAD_ID_ETHERNET], NULL, (void*)&Eth_Comms_Service, (void*)&shared_data);
+	
 	// Spin off the file fifo threads so that external programs can communicate via pipes
 	pthread_create(&thread[THREAD_ID_FILE_FIFO_IN], NULL, (void*)&File_Fifo_Service_Input, (void*)&shared_data);
 	pthread_create(&thread[THREAD_ID_FILE_FIFO_OUT], NULL, (void*)&File_Fifo_Service_Output, (void*)&shared_data);

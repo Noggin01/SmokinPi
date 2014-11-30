@@ -13,7 +13,6 @@
 #include "pid.h"
 
 /* *** Global Variables *** */
-#define MAX_NAME_LENGTH			50
 
 static float g_cabinet_setpoint_temp_deg_f;
 static int g_forced_servo_position;

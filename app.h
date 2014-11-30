@@ -1,3 +1,5 @@
+#define MAX_NAME_LENGTH			64
+
 void App_Init( void );
 void App_Service( void* shared_data_address );
 

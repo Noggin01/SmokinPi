@@ -8,8 +8,8 @@
 
 /* *** Defined Values *** */
 #define SPI_CHANNEL     0
-#define SPI_SPEED		2000000
-#define SPI_MODE		0
+#define SPI_SPEED			2000000
+#define SPI_MODE			0
 
 /*************
 Spi mode table
