@@ -14,7 +14,7 @@
 
 /* *** Global Variables *** */
 
-static float g_cabinet_setpoint_temp_deg_f;
+static float g_cabinet_setpoint_temp_deg_f = 225.0;
 static int g_forced_servo_position;
 
 static pid_type g_pid;
@@ -40,9 +40,9 @@ void App_Init( void )
 	int i;
 
 	Pid_Reset( &g_pid );
-	g_pid.windup_guard = 500000.0;
-	g_pid.proportional_gain = 5.0;
-	g_pid.integral_gain = 0.0002;
+	g_pid.windup_guard = 4000000.0;
+	g_pid.proportional_gain = 20.0;
+	g_pid.integral_gain = 0.0001;
 	g_pid.derivative_gain = 0.0;
 
 	strcpy(g_channel_names[0], "Cabinet");
@@ -65,13 +65,13 @@ void App_Service( void* shared_data_address )
 	float temperature_data[NBR_OF_THERMISTORS];
 	shared_data_type* p_shared_data = (shared_data_type*)shared_data_address;
 	int x, y;
-	
-	static float cabinet_temperature = 0;
+
+	static float cabinet_temperature = 0.0;
 	static int servo_position;
 	static int timer = 0;
 	static int print_timer = 0;
 	float temperature_error;
-	
+
 	// Obtain a lock on the shared data so that a copy can be made
 	pthread_mutex_lock(&mutex);
 	memcpy( (char*)adc_data, (char*)p_shared_data->adc_results, sizeof(adc_data) );
@@ -82,7 +82,7 @@ void App_Service( void* shared_data_address )
 	Thermistor_Service( adc_data, temperature_data );
 	cabinet_temperature = temperature_data[0];
 	temperature_error = (float)g_cabinet_setpoint_temp_deg_f - cabinet_temperature;
-		
+
 	// Periodically update the PID data
 	if (++timer >= RECALCULATE_DELAY)
 	{
