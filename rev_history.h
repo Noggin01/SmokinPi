@@ -4,10 +4,24 @@ File:  rev_history.h
 ***************************************************************************************************/
 
 #define FIRMWARE_MAJOR		0
-#define FIRMWARE_MINOR		1
-#define FIRMWARE_REVISION	4
+#define FIRMWARE_MINOR		2
+#define FIRMWARE_REVISION	0
 
 /* Description of changes. *************************************************************************
+
+*** 19NOV15 *** Ver 0.2.0 *** HGM
+1. Updated the ADC code to work with the version 40 of the PIGPIOD library.  Previously, version
+16 was needed, and version 16 had a custom modification as well.  This change should make updating
+libraries in the future easier.
+2. Updates servo code to work with PIGPIODv40
+3. More reasonable settings for the PID control were selected as defaults
+4. The default setpoint is now 225°F
+
+Dependancies:
+	1. PIGPIO Library, currently at version 40, http://abyz.co.uk/rpi/pigpio
+		pigpiod should be set to autostart on bootup
+	2. ncurses-dev, use sudo apt-get install ncurses-dev
+	3. raspbian-wheezy, raspbian-jessie is untested
 
 *** 26NOV14 *** Ver 0.1.4 *** HGM
 1. Began adding basic Ethernet functionality
