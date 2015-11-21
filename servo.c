@@ -39,7 +39,7 @@ void Servo_Service( int position_cmd )
 	static unsigned char position_known = false;
 	static int last_position_cmd;
 	static int timer_us = 0;
-	
+
 	static int force_enable_timer = 0;
 
 	int distance;
@@ -70,10 +70,10 @@ void Servo_Service( int position_cmd )
 		position_cmd = MIN_PHYSICAL_POSITION;
 	if (position_cmd > MAX_PHYSICAL_POSITION)
 		position_cmd = MAX_PHYSICAL_POSITION;
-	
+
 	if (timer_us <= 0)
 	{
-		Servo_Set_Position(0);	
+		Servo_Set_Position(0);
 		timer_us = 0;
 	}
 	else
@@ -85,6 +85,23 @@ void Servo_Service( int position_cmd )
 	last_position_cmd = position_cmd;
 }
 
+/***************************************************************************************************
+Much of the data returned from PIGPIOD is in ASCII format.  This function reads characters from
+the file handle, converts them to an 8-bit signed value, and returns it as an int.
+***************************************************************************************************/
+static int Servo_Read_Ascii_Byte( FILE* pFile )
+{
+	char read_buffer[10] = { 0 };	// Longest expected read is 4 characters then a space or \n
+	char ch;
+	int i = 0;
+
+	do {
+		ch = fgetc(pFile);
+		read_buffer[i++] = ch;
+	} while (((ch >= '0') && (ch <= '9')) || (ch == '-'));
+
+	return atoi(read_buffer);
+}
 
 /*******************************************************************************
 This function obtains the mutex for the PiGPIO pipes, writes the specified
@@ -103,8 +120,8 @@ static int Servo_Set_Position( int width )
 	int pigpio_response;
 	int result = 0;
 
-	pthread_mutex_lock(&pigpio_mutex);		
-	
+	pthread_mutex_lock(&pigpio_mutex);
+
 	pigpio_write = fopen("/dev/pigpio", "w");
 	pigpio_read = fopen("/dev/pigout", "r");
 
@@ -119,7 +136,7 @@ static int Servo_Set_Position( int width )
 		fflush(pigpio_write);
 
 		// read result from pigout
-		fscanf(pigpio_read, "%d", &pigpio_response);
+		pigpio_response = Servo_Read_Ascii_Byte(pigpio_read);
 		if (pigpio_response == 0)	// On a successful write to pigpio, pigout should return 0
 			result = 1;
 	}

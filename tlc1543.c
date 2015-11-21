@@ -23,8 +23,10 @@ Mode POL PHA
 
 /* *** Global Variables *** */
 
+
 /* *** Function Declarations *** */
 static int Tlc1543_Transfer( uint8_t* pData, int length );
+static int Tlc1543_Read_Ascii_Byte( FILE* pReadFile );
 
 /* *** Accessors *** */
 
@@ -35,6 +37,7 @@ first read in the service routine to be valid data
 int Tlc1543_Init( void )
 {
 	uint8_t data[2] = { 0 };
+	uint8_t i;
 
 	printf("Initializing Tlc1543\n");
 
@@ -48,8 +51,8 @@ reads the result.  The result of the PiGPIO SPI transfer is in the following for
 1. 	Result code in ASCII format.  On a failed transaction, the result code is a negative number. On
 	a successful transaction, the result code is the number of bytes available to read from the
 	pipe.
-2.	A carriage return follows the result code
-3.	If the result code is positive, individual data bytes in binary format
+2.	If the result code is positive, individual data bytes in ASCII format
+3.	A carriage return follows the end of the data
 
 Returns	-1 if the file pipes can't be opened
 		 0 if the response is non-zero
@@ -57,22 +60,23 @@ Returns	-1 if the file pipes can't be opened
 ***************************************************************************************************/
 static int Tlc1543_Transfer( uint8_t* pData, int length )
 {
-	FILE *pigpio_write;
-	FILE *pigpio_read;
-
 	uint8_t* write_data = pData;
 	uint8_t* read_data = pData;
 	char carriage_return;
 
 	int pigpio_handle;
 	int pigpio_response = 0;
+	int response_length = 0;
 	int result = 1;
 	int i;
+	
+	FILE *pigpio_write;
+	FILE *pigpio_read;
 
 	pthread_mutex_lock(&pigpio_mutex);
 
-	pigpio_write = fopen("/dev/pigpio", "w");
 	pigpio_read = fopen("/dev/pigout", "r");
+	pigpio_write = fopen("/dev/pigpio", "w");
 
 	if ((pigpio_write == NULL) || (pigpio_read == NULL))
 	{
@@ -84,7 +88,8 @@ static int Tlc1543_Transfer( uint8_t* pData, int length )
 		fprintf(pigpio_write, "spio %d %d %d\n", SPI_CHANNEL, SPI_SPEED, SPI_MODE);
 		fflush(pigpio_write);
 
-		fscanf(pigpio_read, "%d", &pigpio_handle);
+		pigpio_handle = Tlc1543_Read_Ascii_Byte(pigpio_read);
+		
 		if (pigpio_handle < 0)
 		{
 			printf("Error retrieving handle: %s.%d\n", __FILE__, __LINE__);
@@ -92,24 +97,26 @@ static int Tlc1543_Transfer( uint8_t* pData, int length )
 		}
 		else
 		{
+			// Open comms with PIGPIOD
 			fprintf(pigpio_write, "spix %d", pigpio_handle);
 			for (i = 0; i < length; i++)
 				fprintf(pigpio_write, " 0x%02X", *write_data++);
 			fputs("\n", pigpio_write);
 			fflush(pigpio_write);
 
-			fscanf(pigpio_read, "%d", &pigpio_response);
-			carriage_return = fgetc(pigpio_read);
+			// The first piece of returned data is the number of ascii
+			// formatted bytes that are expected to be in the buffer
+			response_length = Tlc1543_Read_Ascii_Byte(pigpio_read);
 
-			if ((pigpio_response == length) && (carriage_return == '\n'))
-			{
-				for (i = 0; i < length; i++)
-					*read_data++ = fgetc(pigpio_read);
-			}
+			for (i = 0; ((i < response_length) && (i < sizeof(read_data))); i++)
+				read_data[i] = Tlc1543_Read_Ascii_Byte(pigpio_read);
 
+			// Close comms with PIGPIOD
 			fprintf(pigpio_write, "spic %d\n", pigpio_handle);
 			fflush(pigpio_write);
-			fscanf(pigpio_read, "%d", &pigpio_response);
+
+			// When closing coomms, PIGPIOD should return a 0
+			pigpio_response = Tlc1543_Read_Ascii_Byte(pigpio_read);
 			if (pigpio_response != 0)
 				result = 0;
 		}
@@ -123,6 +130,24 @@ static int Tlc1543_Transfer( uint8_t* pData, int length )
 	pthread_mutex_unlock(&pigpio_mutex);
 
 	return result;
+}
+
+/***************************************************************************************************
+Much of the data returned from PIGPIOD is in ASCII format.  This function reads characters from
+the file handle, converts them to an 8-bit signed value, and returns it as an int.
+***************************************************************************************************/
+static int Tlc1543_Read_Ascii_Byte( FILE* pFile )
+{
+	char read_buffer[10] = { 0 };	// Longest expected read is 4 characters then a space or \n
+	char ch;
+	int i = 0;
+
+	do {
+		ch = fgetc(pFile);
+		read_buffer[i++] = ch;
+	} while (((ch >= '0') && (ch <= '9')) || (ch == '-'));
+
+	return atoi(read_buffer);
 }
 
 /***************************************************************************************************
@@ -141,6 +166,8 @@ void Tlc1543_Service( void *shared_data_address )
 		usleep(10000);	// Sleep for 10mS
 
 		// start i at 1 as we've already sent the command to read channel 0
+		// as we send the command to read channel 1, the data we get back
+		// from the SPI port will be for channel i-1
 		for (i = 1; i < NBR_ADC_CHANNELS; i++)
 		{
 			data[0] = i << 4;
