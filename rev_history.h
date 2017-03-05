@@ -4,10 +4,22 @@ File:  rev_history.h
 ***************************************************************************************************/
 
 #define FIRMWARE_MAJOR		0
-#define FIRMWARE_MINOR		2
+#define FIRMWARE_MINOR		3
 #define FIRMWARE_REVISION	0
 
 /* Description of changes. *************************************************************************
+
+*** 26FEB17 *** Ver 0.3.0 *** HGM
+1. Changed thermocouple support to the Maverick PR-005 for availability purposes
+2. Corrected an issue with the SPI speed that was causing ADC readings to be
+occasionally right shifted by 1
+3. Overhauled the ethernet port command structure to remove the raw data structs and replace them
+with a human readable data string format to fascilitate debugging.  TCP protocol will handle
+ensuring the data is transmitted and received correctly
+
+*** 19NOV15 *** Ver 0.2.1 *** HGM
+1. Began addition of thermocouple temperature measurement for fire detection purposes
+2. Added a monitor module to send messages when the application starts and when the fire goes out
 
 *** 19NOV15 *** Ver 0.2.0 *** HGM
 1. Updated the ADC code to work with the version 40 of the PIGPIOD library.  Previously, version

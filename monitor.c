@@ -5,6 +5,7 @@
 #include <pigpio.h>
 #include <pthread.h>
 #include <ncurses.h>
+#include <time.h>
 #include "monitor.h"
 #include "main.h"
 #include "email.h"
@@ -67,19 +68,20 @@ void Monitor_Service( void* shared_data_address )
 
 void _Monitor_Service_Fire_Loss_Detection( void* shared_data_address )
 {
-	#define DETECT_STATE_TIME			(60000/MONITOR_SERVICE_RATE_MS)		/* 1 minute */
-	#define NOTIFY_FIRE_LOST_TIME		(5 * 60000/MONITOR_SERVICE_RATE_MS)	/* 5 minutes */
-	#define FIRE_DETECTED_TEMP			400.0		/* Fire is detected at 400.0°F */
-	#define FIRE_LOST_TEMP				350.0		/* Fire is lost at 350.0°F */
+	#define DETECT_STATE_TIME			(10000/MONITOR_SERVICE_RATE_MS)		/* 0 seconds */
+	#define NOTIFY_FIRE_LOST_REPEAT_TIME		(5 * 60000/MONITOR_SERVICE_RATE_MS)	/* 5 minutes */
+	#define FIRE_DETECTED_TEMP			250.0		/* Fire is detected at 250.0°F */
+	#define FIRE_LOST_TEMP				150.0		/* Fire is lost at 100.0°F */
 	
 	const char state_strings[NBR_MONITOR_STATES][32] = {
 		{ "Waiting for fire" },
-		{ "Fire detected" },
-		{ "Loss of fire" },
+		{ "Fire detected   " },
+		{ "Loss of fire    " },
 	};
 	static uint32_t timer = 0;
 	shared_data_type* p_shared_data = (shared_data_type*)shared_data_address;
 	float fire_temp;
+	float cabin_temp;
 	
 	static int print_timer = 0;
 	static int send_once = 0;
@@ -87,6 +89,7 @@ void _Monitor_Service_Fire_Loss_Detection( void* shared_data_address )
 	
 	pthread_mutex_lock(&mutex);
 	fire_temp = p_shared_data->temp_deg_f_fire;
+	cabin_temp = p_shared_data->temp_deg_f[0];
 	pthread_mutex_unlock(&mutex);
 	
 	if (++print_timer >= (1000/MONITOR_SERVICE_RATE_MS))
@@ -137,7 +140,7 @@ void _Monitor_Service_Fire_Loss_Detection( void* shared_data_address )
 	
 		default:
 		case MONITOR_FIRE_LOST:
-			if (++timer >= NOTIFY_FIRE_LOST_TIME)
+			if (++timer >= NOTIFY_FIRE_LOST_REPEAT_TIME)
 			{
 				Monitor_Send_Notification( "Warning", "Loss of fire has been detected" );
 				
@@ -155,10 +158,16 @@ void Monitor_Send_Notification( char* pSubject, char* pMsg )
 {
 #ifdef NOTIFICATION_EMAIL_ADDRESS
 	char cmd_buffer[256];
+	time_t t = time(NULL);								// Used for obtaining current time
+	struct tm tm;										// Used for obtaining current time
+	
+	t = time(NULL);
+	tm = *localtime(&t);
 	
 	strcpy( cmd_buffer, "echo \"" );
 	strcat( cmd_buffer, pMsg );
 	strcat( cmd_buffer, "\" | mail -s \"");
+	sprintf( cmd_buffer, "%s%2d:%02d - ", cmd_buffer, tm.tm_hour, tm.tm_min );
 	strcat( cmd_buffer, pSubject );
 	strcat( cmd_buffer, "\" ");
 	strcat( cmd_buffer, NOTIFICATION_EMAIL_ADDRESS );

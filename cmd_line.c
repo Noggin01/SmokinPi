@@ -6,6 +6,7 @@
 #include "cmd_line.h"
 #include "main.h"
 #include "app.h"
+#include "monitor.h"
 
 /* *** Data Types *** */
 typedef struct 
@@ -19,15 +20,12 @@ typedef enum
 {
 	CMD_SHOW_MENU=0,
 	CMD_EXIT,
-	CMD_TOGGLE_DEBUG_FLAG,
-	CMD_SHOW_DEBUG_FLAGS,
 	CMD_SET_SETPOINT,
-	CMD_TOGGLE_AUTO_SERVO_CONTROL,
-	CMD_SET_SERVO_PULSE_WIDTH,
 	CMD_SET_KP,
 	CMD_SET_KI,
-	CMD_SET_KD,
 	CMD_SET_KL,
+	CMD_LIGHT_FIRE,
+	CMD_SEND_TEST_TEXT,
 	
 	NBR_OF_CMDS,
 	NO_CMD_AVAILABLE,
@@ -37,15 +35,12 @@ typedef enum
 static const cmd_type cmd_list[NBR_OF_CMDS] = {
 	{ "HELP",			"Shows this menu\n"									},
 	{ "EXIT",			"Closes the program\n"								},
-	{ "DEBUG=",			"Toggle debug flag\n"								},
-	{ "DEBUG?",			"Lists available debug flags\n"					},
 	{ "SETTEMP=",		"Set the target cabinet temperature\n" 		},
-	{ "SERVO!",			"Toggles PID control of the servo\n"			},
-	{ "SERVO=",			"Sets the pulse width of the servo\n"			},
 	{ "KP=",				"Set proportaional gain\n"							},
 	{ "KI=",				"Set integral gain\n"								},
-	{ "KD=",				"Set derivative gain\n"								},
 	{ "KL=",				"Set integral limit\n"								},
+	{ "LIGHT",				"Set servo to max position so the fire can be lit\n"								},
+	{ "TEXT",				"Send a test text message\n"			},
 };
 
 char g_cmd[MAX_CMD_LENGTH];
@@ -154,28 +149,11 @@ static void Cmd_Line_Process( void )
 				_exit(3);
 				break;
 				
-			case CMD_TOGGLE_DEBUG_FLAG:
-				printw("Not implemented yet\n");
-				break;
-				
-			case CMD_SHOW_DEBUG_FLAGS:
-				printw("Not implemented yet\n");
-				break;
-				
 			case CMD_SET_SETPOINT:
 				printw("New Setpoint: %4.2f\n", atof(p_param) );
 				App_Set_Cabinet_Setpoint( atof(p_param) );
 				break;
 			
-			case CMD_TOGGLE_AUTO_SERVO_CONTROL:
-				printw("Not implemented yet\n");
-				break;
-				
-			case CMD_SET_SERVO_PULSE_WIDTH:
-				printw("New Pulse Width: %4d\n", atoi(p_param) );
-				App_Force_Servo_Position( atoi(p_param) );
-				break;
-
 			case CMD_SET_KP:
 				printw("New proportional gain: %0.3f\n", atof(p_param) );
 				App_Set_Kp( atof(p_param) );
@@ -186,15 +164,21 @@ static void Cmd_Line_Process( void )
 				App_Set_Ki( atof(p_param) );
 				break;
 				
-			case CMD_SET_KD:
-				printw("New derivative gain: %0.3f\n", atof(p_param) );
-				App_Set_Kd( atof(p_param) );
-				break;
-				
 			case CMD_SET_KL:
 				printw("New integral limit: %0.3f\n", atof(p_param) );
 				App_Set_Kl( atof(p_param) );
 				break;
+				
+			case CMD_LIGHT_FIRE:
+				printw("Ignoring fire temperature temporarily\n");
+				Monitor_Light_Fire();
+				break;
+				
+			case CMD_SEND_TEST_TEXT:
+				printw("Sending test text\n");
+				Monitor_Send_Notification( "Test", "This is a test notification" );
+				break;
+				
 		}
 	}
 	else

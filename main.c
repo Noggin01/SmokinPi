@@ -30,8 +30,9 @@ Five threads
 #include "logging.h"
 #include "cmd_line.h"
 #include "rev_history.h"
-#include "file_fifo.h"
+//#include "file_fifo.h"
 #include "eth_comms.h"			// For Ethernet communications
+#include "monitor.h"
 
 typedef enum 
 {
@@ -39,8 +40,9 @@ typedef enum
 	THREAD_ID_LOGGING,			// Thread for logging data to the uSD card
 	THREAD_ID_CMD_LINE,			// Thread for reading data from the cmd line
 	THREAD_ID_ETHERNET,			// Thread for communication via Ethernet
-	THREAD_ID_FILE_FIFO_IN,		// Thread for reading from external programs
-	THREAD_ID_FILE_FIFO_OUT,	// Thread for writing to external programs
+	THREAD_ID_MONITOR,			// Thread for monitoring the system and sending notifications
+//	THREAD_ID_FILE_FIFO_IN,		// Thread for reading from external programs
+//	THREAD_ID_FILE_FIFO_OUT,	// Thread for writing to external programs
 
 	NBR_THREADS,
 } thread_ids;
@@ -69,13 +71,13 @@ void Main_Init_Hardware( void )
 		_exit(3);
 	}
 
-	if (File_Fifo_Init() <= 0)
-	{
-		printf("Error making pipes\n");
-		_exit(3);
-	}
+//	if (File_Fifo_Init() <= 0)
+//	{
+//		printf("Error making pipes\n");
+//		_exit(3);
+//	}
 
-	if (Eth_Comms_Init() < 0)
+	if (Eth_Comms_Init(&shared_data) < 0)
 	{
 		printf("Error iniializing Ethernet comms\n");
 		_exit(3);
@@ -83,9 +85,10 @@ void Main_Init_Hardware( void )
 
 	Tlc1543_Init();
 	Thermistor_Init();
-	App_Init();
+	App_Init( &shared_data );
 	Logging_Init();
 	Cmd_Line_Init( &shared_data );
+	Monitor_Init( &shared_data );
 	sleep(1);
 }
 
@@ -121,13 +124,16 @@ int main( void )
 	// Spin off the ethernet thread
 	pthread_create(&thread[THREAD_ID_ETHERNET], NULL, (void*)&Eth_Comms_Service, (void*)&shared_data);
 	
+	// Spin off the monitor thread
+	pthread_create(&thread[THREAD_ID_MONITOR], NULL, (void*)&Monitor_Service, (void*)&shared_data);
+	
 	// Spin off the file fifo threads so that external programs can communicate via pipes
-	pthread_create(&thread[THREAD_ID_FILE_FIFO_IN], NULL, (void*)&File_Fifo_Service_Input, (void*)&shared_data);
-	pthread_create(&thread[THREAD_ID_FILE_FIFO_OUT], NULL, (void*)&File_Fifo_Service_Output, (void*)&shared_data);
+//	pthread_create(&thread[THREAD_ID_FILE_FIFO_IN], NULL, (void*)&File_Fifo_Service_Input, (void*)&shared_data);
+//	pthread_create(&thread[THREAD_ID_FILE_FIFO_OUT], NULL, (void*)&File_Fifo_Service_Output, (void*)&shared_data);
 	
 	while (!g_exit_signal_received)
 	{
-		App_Service((void*)&shared_data);
+		App_Service();
 		usleep(MAIN_LOOP_TIME_US);
 	}
 	

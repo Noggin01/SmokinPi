@@ -62,46 +62,52 @@ remaining half of the analog channels, and the propane valve's servo position.
 ***************************************************************************************************/
 void Logging_Service( void *shared_data_address )
 {
-   float local_temperature_deg_f[NBR_OF_THERMISTORS];   // Local copy of the temperature data
-   uint16_t local_adc_results[NBR_ADC_CHANNELS];      // Local copy of the shared ADC data
-   uint16_t local_servo_position;                  // Local copy of the servo position
-   time_t t = time(NULL);                        // Used for obtaining current time
-   struct tm tm;                              // Used for obtaining current time
-   uint8_t i;
+	float local_temperature_deg_f[NBR_OF_THERMISTORS];	// Local copy of the temperature data
+	float local_fire_temp_deg_f;						// Local copy of the fire temperature
+	uint16_t local_adc_results[NBR_ADC_CHANNELS];    	// Local copy of the shared ADC data
+	uint16_t local_servo_position;                  	// Local copy of the servo position
+	time_t t = time(NULL);								// Used for obtaining current time
+	struct tm tm;										// Used for obtaining current time
+	uint8_t i;
 
-      // Pointer for accessing shared data
-   shared_data_type* p_shared_data = (shared_data_type*)shared_data_address;
+	// Pointer for accessing shared data
+	shared_data_type* p_shared_data = (shared_data_type*)shared_data_address;
 
-   signal(SIGINT, Logging_Signal_Handler);
+	signal(SIGINT, Logging_Signal_Handler);
 
-   sleep(5);      // Sleep 5 seconds before logging any data
+	sleep(5);      // Sleep 5 seconds before logging any data
 
-   while (write_ptr != NULL)
-   {
-      // Obtain a lock to the shared data, create a local
-      // copy of the data, then release the lock
+	while (write_ptr != NULL)
+	{
+		// Obtain a lock to the shared data, create a local
+		// copy of the data, then release the lock
 		pthread_mutex_lock(&mutex);
 		memcpy( (uint8_t*)local_temperature_deg_f, (uint8_t*)p_shared_data->temp_deg_f, sizeof(local_temperature_deg_f));
 		memcpy( (uint8_t*)local_adc_results, (uint8_t*)p_shared_data->adc_results, sizeof(local_adc_results));
 		local_servo_position = p_shared_data->servo_position;
+		local_fire_temp_deg_f = p_shared_data->temp_deg_f_fire;
 		pthread_mutex_unlock(&mutex);
 
-      // Get the current time, build the timestamp and write it to the file.  Might
-      // as well write the servo position as well.  Good a time as any.
-      t = time(NULL);
-      tm = *localtime(&t);
-      fprintf(write_ptr, "%d-%d-%d %2d:%02d:%02d,%u", tm.tm_year + 1900, tm.tm_mon + 1,
-         tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, local_servo_position);
+		// Get the current time, build the timestamp and write it to the file.  Might
+		// as well write the servo position as well.  Good a time as any.
+		t = time(NULL);
+		tm = *localtime(&t);
+		fprintf(write_ptr, "%d-%d-%d %2d:%02d:%02d,%u", tm.tm_year + 1900, tm.tm_mon + 1,
+				tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, local_servo_position);
 
-      // Write the temperature for each of the probes on the first 5 channels
-      for (i = 0; i < NBR_OF_THERMISTORS; i++)
-         fprintf(write_ptr, ",%4.2f", local_temperature_deg_f[i]);
+		// Write the temperature for each of the probes
+		for (i = 0; i < NBR_OF_THERMISTORS; i++)
+			fprintf(write_ptr, ",%4.2f", local_temperature_deg_f[i]);
 
-      fwrite("\n", 1, 1, write_ptr);      // Append a new line to the file
-      fflush(write_ptr);						// Force the write to disk
-      
-      Logging_Full_Sleep(15);      // Delay 15 seconds before writing the next log entry
-   }
+		// Write the temperature and ADC value for the fire detection
+		fprintf( write_ptr, ",%4.1f", local_fire_temp_deg_f);
+		fprintf( write_ptr, ",%u", local_adc_results[NBR_ADC_CHANNELS-1]);
+		
+		fwrite("\n", 1, 1, write_ptr);	// Append a new line to the file
+		fflush(write_ptr);				// Force the write to disk
+
+		Logging_Full_Sleep(15);			// Delay 15 seconds before writing the next log entry
+	}
 }
 
 /***************************************************************************************************

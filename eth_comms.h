@@ -46,33 +46,8 @@ typedef struct
 	unsigned char name[MAX_NAME_LENGTH];		// Null terminated character string
 } msg_set_chan_name;
 
-typedef struct
-{
-	msg_header_type header;
-	unsigned int major_ver;
-	unsigned int minor_ver;
-	unsigned int revision;
-} msg_ver_response;
 
-typedef struct
-{
-	msg_header_type header;
-	float temperature_setpoint;
-	float channel_temperatures[NBR_ADC_CHANNELS];
-	unsigned char channel_names[NBR_ADC_CHANNELS][MAX_NAME_LENGTH];
-	float kp;
-	float ki;
-	float kl;
-	float i_windup;
-	float pid_output;
-	unsigned short servo_position;
-	unsigned short servo_physical_min;
-	unsigned short servo_physical_max;
-	unsigned short servo_control_min;
-	unsigned short servo_control_max;
-} msg_status_response;
-
-int Eth_Comms_Init( void );
-void Eth_Comms_Service( void* shared_data_address );
+int Eth_Comms_Init( void* shared_data_address );
+void Eth_Comms_Service( void );
 
 #endif
