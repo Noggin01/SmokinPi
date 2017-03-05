@@ -1,0 +1,111 @@
+<html lang="en">
+	<head>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>
+	</head>
+
+	<body>
+		<h1>Smokin'Pi</h1>
+		<div id="date">date div</div>
+		<div id="statusData">statusData div</div>
+		<textarea id="text"></textarea>
+        
+        <table style="width:30%">
+            <tr>
+                <th>Channel</th>
+                <th>Temperature</th> 
+                <th>Raw ADC</th>
+            </tr>
+            <tr>
+                <td>Setpoint</td>
+                <td><div id="setpointtemp">setpoint div</div></td> 
+                <td>N/A</td>
+            </tr>
+            <tr>
+                <td>Cabinet</td>
+                <td><div id="cabinettemp"></div></td> 
+                <td><div id="cabinetadc"></div></td>
+            </tr>
+            <tr>
+                <td>1</td>
+                <td><div id="ch1temp"></div></td> 
+                <td><div id="ch1adc"></div></td>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td><div id="ch2temp"></div></td> 
+                <td><div id="ch2adc"></div></td>
+            </tr>
+            <tr>
+                <td>3</td>
+                <td><div id="ch3temp"></div></td> 
+                <td><div id="ch3adc"></div></td>
+            </tr>
+            <tr>
+                <td>4</td>
+                <td><div id="ch4temp"></div></td> 
+                <td><div id="ch4adc"></div></td>
+            </tr>
+            <tr>
+                <td>5</td>
+                <td><div id="ch5temp"></div></td> 
+                <td><div id="ch5adc"></div></td>
+            </tr>
+            <tr>
+                <td>6</td>
+                <td><div id="ch6temp"></div></td> 
+                <td><div id="ch6adc"></div></td>
+            </tr>
+            <tr>
+                <td>7</td>
+                <td><div id="ch7temp"></div></td> 
+                <td><div id="ch7adc"></div></td>
+            </tr>
+            <tr>
+                <td>8</td>
+                <td><div id="ch8temp"></div></td> 
+                <td><div id="ch8adc"></div></td>
+            </tr>
+            <tr>
+                <td>9</td>
+                <td><div id="ch9temp"></div></td> 
+                <td><div id="ch9adc"></div></td>
+            </tr>
+        </table>
+        
+		<script type="text/javascript">
+			var socket = io.connect();
+
+			socket.on('date', function(data){ 
+				$('#date').text(data.date); 
+			});
+			
+			socket.on('statusData', function(data){
+				$('#statusData').text(data.statusData);
+                
+                var str = data.statusData;
+                var elements = str.split(",");
+                $('#setpointtemp').text(elements[1]);
+                $('#cabinettemp').text(elements[2]);
+                $('#ch1temp').text(elements[3]);
+                $('#ch2temp').text(elements[4]);
+                $('#ch3temp').text(elements[5]);
+                $('#ch4temp').text(elements[6]);
+                $('#ch5temp').text(elements[7]);
+                $('#ch6temp').text(elements[8]);
+                $('#ch7temp').text(elements[9]);
+                $('#ch8temp').text(elements[10]);
+                $('#ch9temp').text(elements[11]);
+                $('#ch1adc').text(elements[13]);
+            });
+			
+			$(document).ready(function(){
+				$('#text').keypress(function(e){
+					socket.emit('client_data', {'letter': String.fromCharCode(e.charCode)});
+				});
+			});
+  
+		</script>
+	</body>
+</html>
+

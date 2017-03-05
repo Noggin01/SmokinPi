@@ -1,0 +1,16 @@
+<html>
+  <head>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>  </head>
+  <body>
+    <script>
+      var socket = io.connect();
+
+      socket.on('date', function(data){
+        $('#date').text(data.date);
+      });
+    </script>
+	<h1>Date</h1>
+    <div id="date">date div</div>
+  </body>
+</html>
